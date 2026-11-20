@@ -29,9 +29,16 @@ not copied into this repository.
 | [jakubkrehel/skills](https://github.com/jakubkrehel/skills) | `better-accessibility`, `better-colors`, `better-interface`, `better-layout`, `better-motion`, `better-typography`, `better-ui`, `better-writing`, `break`, `build-design`, `explain-interface`, `interface-review`, `variant` | Interface quality |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | `find-skills` | Finding more skills |
 
-The list lives in two places that must stay in sync: [`install.sh`](install.sh) and
-[`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). To update a source, change
-its commit in both, then run `claude plugin validate ./`.
+The list lives in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json);
+`install.sh` reads it. To pull in skills you installed globally, ask an agent in this repository to
+"sync skills" (the repository-only `sync-skills` skill in `.agents/skills`).
+
+## Global agent instructions
+
+[`global/AGENTS.md`](global/AGENTS.md) holds the instructions every agent follows on every project.
+`install.sh` installs it as `~/.codex/AGENTS.md` (Codex) and links `~/.claude/CLAUDE.md` (Claude
+Code) to it. Existing files that differ are backed up first. Run from a clone, it links to the
+clone, so edits apply immediately. Set `SKIP_AGENTS_MD=1` to skip this step.
 
 ## Install
 
@@ -42,7 +49,7 @@ curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | 
 ```
 
 This runs `npx skills add` for this repository and each external source, globally and without
-prompts. Extra flags go to every `skills add`, for example `sh install.sh -a claude-code -a codex`.
+prompts, then installs the global agent instructions. Extra flags go to every `skills add`, for example `sh install.sh -a claude-code -a codex`.
 To install only this repository's skills: `npx skills add envoy1084/skills`.
 
 ### Claude Code plugins
@@ -80,7 +87,7 @@ for skill in skills/*/; do
 done
 ```
 
-Test `install.sh` against a local clone with `SKILLS_SOURCE=$PWD sh install.sh`.
+Running `sh install.sh` from a clone installs that clone instead of GitHub.
 
 ## Make them yours
 

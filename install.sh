@@ -1,37 +1,86 @@
 #!/usr/bin/env sh
-# Installs envoy1084/skills plus the external skills it builds on, for every agent the `skills`
-# CLI supports. External sources are pinned to a commit; bump them deliberately.
+# Installs envoy1084/skills, the external skills listed in .claude-plugin/marketplace.json, and the
+# global agent instructions (global/AGENTS.md), for every agent the `skills` CLI supports.
 #
 #   curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh
 #   sh install.sh -a claude-code -a codex   # extra flags are passed to every `skills add`
+#
+# Run from a clone, it installs that clone's skills and links the instructions to it, so edits in
+# the clone take effect immediately. Set SKIP_AGENTS_MD=1 to leave the instructions alone.
 set -eu
 
-add() {
-  npx -y skills add "$@"
-}
-
-# Global (user-level) install without prompts.
+repo="envoy1084/skills"
+raw="https://raw.githubusercontent.com/$repo/main"
 flags="-g -y"
 
-# This repository: every skill. SKILLS_SOURCE points at a local clone when testing changes.
-add "${SKILLS_SOURCE:-envoy1084/skills}" --skill '*' $flags "$@"
+clone=""
+case "$0" in
+  */install.sh | install.sh)
+    dir=$(cd "$(dirname "$0")" && pwd)
+    [ -f "$dir/.claude-plugin/marketplace.json" ] && clone="$dir"
+    ;;
+esac
 
-# t3dotgg/tstack: pull requests.
-add t3dotgg/tstack@11e37a74d0a6868c121cd0910ab2b3bd9873b92a \
-  -s file-pr -s babysit-pr -s leaving-pr-comments $flags "$@"
+if [ -n "$clone" ]; then
+  marketplace=$(cat "$clone/.claude-plugin/marketplace.json")
+  self="$clone"
+else
+  marketplace=$(curl -fsSL "$raw/.claude-plugin/marketplace.json")
+  self="$repo"
+fi
 
-# emilkowalski/skills: animation and design engineering.
-add emilkowalski/skills@64eb3deb9a5fbfa041faf783e0bc3fd635872e9c \
-  -s animate -s animation-performance -s animation-vocabulary -s apple-design -s ask-emil \
-  -s ask-sonner -s break-ui -s choreograph -s emil-design-eng -s find-animation-opportunities \
-  -s gestures -s improve-animations -s learn-taste -s pick-ui-library -s prototype \
-  -s remove-animations -s review-animations $flags "$@"
+# One line per external plugin: "<owner/repo>@<sha> <skill> <skill> …".
+# shellcheck disable=SC2016
+sources=$(printf '%s' "$marketplace" | node -e '
+  let input = "";
+  process.stdin.on("data", (chunk) => (input += chunk));
+  process.stdin.on("end", () => {
+    for (const plugin of JSON.parse(input).plugins) {
+      if (typeof plugin.source === "string") continue;
+      const skills = (plugin.skills ?? []).map((path) => path.replace(/^\.\//, ""));
+      console.log([`${plugin.source.url}@${plugin.source.sha}`, ...skills].join(" "));
+    }
+  });
+')
 
-# jakubkrehel/skills: interfaces.
-add jakubkrehel/skills@672ae44ace6aaed65b86cbb1e2fd6fbea0e79578 \
-  -s better-accessibility -s better-colors -s better-interface -s better-layout -s better-motion \
-  -s better-typography -s better-ui -s better-writing -s break -s build-design \
-  -s explain-interface -s interface-review -s variant $flags "$@"
+# shellcheck disable=SC2086
+npx -y skills add "$self" --skill '*' $flags "$@"
 
-# vercel-labs/skills: discovering more skills.
-add vercel-labs/skills@57217cf86ba38148a57af9e90d14a4c049558330 -s find-skills $flags "$@"
+printf '%s\n' "$sources" | while read -r source skills; do
+  [ -n "$source" ] || continue
+  skill_flags=""
+  for skill in $skills; do skill_flags="$skill_flags -s $skill"; done
+  # shellcheck disable=SC2086
+  npx -y skills add "$source" $skill_flags $flags "$@" < /dev/null
+done
+
+if [ "${SKIP_AGENTS_MD:-0}" != 1 ]; then
+  codex="$HOME/.codex/AGENTS.md"
+  claude="$HOME/.claude/CLAUDE.md"
+  mkdir -p "$HOME/.codex" "$HOME/.claude"
+
+  if [ -n "$clone" ]; then
+    instructions="$clone/global/AGENTS.md"
+  else
+    instructions=$(mktemp)
+    curl -fsSL "$raw/global/AGENTS.md" -o "$instructions"
+  fi
+
+  # Keep a copy of hand-written instructions that differ from the ones being installed.
+  for file in "$codex" "$claude"; do
+    if [ -f "$file" ] && [ ! -L "$file" ] && ! cmp -s "$file" "$instructions"; then
+      cp "$file" "$file.backup-$(date +%Y%m%d%H%M%S)"
+      echo "Backed up $file"
+    fi
+  done
+
+  rm -f "$codex"
+  if [ -n "$clone" ]; then
+    ln -s "$instructions" "$codex"
+  else
+    mv "$instructions" "$codex"
+    chmod 644 "$codex"
+  fi
+  ln -sfn "$codex" "$claude"
+  echo "Installed $codex (Codex) and linked $claude (Claude Code) to it"
+fi
