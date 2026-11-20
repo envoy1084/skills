@@ -17,26 +17,48 @@ they work in Claude Code, Codex, and other agents that support skills.
 | `changesets` | (automatic) | Writes changesets and picks the version bump for published packages. |
 | `scaffold-workspace` | "scaffold a new project" | Creates a pnpm + Turborepo + TS 7 + Effect v4 monorepo with klarity, landmines, hardened GitHub workflows and, for npm packages, verified provenance releases. |
 
-### From tstack
+## External skills
 
-Copied unchanged from [t3dotgg/tstack](https://github.com/t3dotgg/tstack) under its MIT license (see
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
+The installers below also add skills from other repositories, pinned to a tested commit. They are
+not copied into this repository.
 
-| Skill | Say | What it does |
+| Source | Skills | For |
 |---|---|---|
-| `file-pr` | "file a PR" | Files a short PR that leads with the problem, not an inventory of changes. |
-| `babysit-pr` | "babysit" | Watches a PR through CI and review bots, and fixes the real findings. |
-| `leaving-pr-comments` | (automatic) | Formats comments that an agent posts on your behalf. |
+| [t3dotgg/tstack](https://github.com/t3dotgg/tstack) | `file-pr`, `babysit-pr`, `leaving-pr-comments` | Filing PRs, driving them through CI and review |
+| [emilkowalski/skills](https://github.com/emilkowalski/skills) | `animate`, `animation-performance`, `animation-vocabulary`, `apple-design`, `ask-emil`, `ask-sonner`, `break-ui`, `choreograph`, `emil-design-eng`, `find-animation-opportunities`, `gestures`, `improve-animations`, `learn-taste`, `pick-ui-library`, `prototype`, `remove-animations`, `review-animations` | Animation and design-engineering polish |
+| [jakubkrehel/skills](https://github.com/jakubkrehel/skills) | `better-accessibility`, `better-colors`, `better-interface`, `better-layout`, `better-motion`, `better-typography`, `better-ui`, `better-writing`, `break`, `build-design`, `explain-interface`, `interface-review`, `variant` | Interface quality |
+| [vercel-labs/skills](https://github.com/vercel-labs/skills) | `find-skills` | Finding more skills |
 
-Some skills call others:
-
-- `file-pr` and `babysit-pr` use `leaving-pr-comments`.
+The list lives in two places that must stay in sync: [`install.sh`](install.sh) and
+[`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). To update a source, change
+its commit in both, then run `claude plugin validate ./`.
 
 ## Install
 
+### Every agent (Claude Code, Codex, Cursor, …)
+
 ```bash
-npx skills add envoy1084/skills
+curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh
 ```
+
+This runs `npx skills add` for this repository and each external source, globally and without
+prompts. Extra flags go to every `skills add`, for example `sh install.sh -a claude-code -a codex`.
+To install only this repository's skills: `npx skills add envoy1084/skills`.
+
+### Claude Code plugins
+
+```bash
+/plugin marketplace add envoy1084/skills
+/plugin install envoy-skills@envoy-skills
+/plugin install tstack-pr@envoy-skills
+/plugin install emil-design-engineering@envoy-skills
+/plugin install interfaces@envoy-skills
+/plugin install find-skills@envoy-skills
+```
+
+Each source is its own plugin, so you can install only the ones you want. Third-party marketplaces
+do not auto-update; run `claude plugin marketplace update envoy-skills` after this repository
+changes.
 
 ### Requirements
 
@@ -57,6 +79,8 @@ for skill in skills/*/; do
   ln -sfn "$PWD/$skill" ~/.codex/skills/"$(basename "$skill")"    # Codex
 done
 ```
+
+Test `install.sh` against a local clone with `SKILLS_SOURCE=$PWD sh install.sh`.
 
 ## Make them yours
 
