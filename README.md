@@ -8,7 +8,13 @@ they work in Claude Code, Codex, and other agents that support skills.
 
 | Skill | Say | What it does |
 |---|---|---|
-| _None yet_ | | |
+| `effect-development` | (automatic) | Writes Effect v4 code from the installed Effect docs and source, never from memory. |
+| `effect-style` | (automatic) | Lays out files, names, imports, errors and services the way the Effect library does. |
+| `jsdocs` | (automatic) | Documents public APIs in the Effect TSDoc format (`@stability`, `@category`, `@since`). |
+| `test-development` | (automatic) | Writes `@effect/vitest` tests for contracts, failures and regressions. |
+| `package-development` | "add a package" | Adds or publishes a workspace package with full npm metadata and a tsdown build. |
+| `dependencies` | (automatic) | Pins exact latest versions, keeps the pnpm catalog for shared deps, ranges for libraries. |
+| `changesets` | (automatic) | Writes changesets and picks the version bump for published packages. |
 
 ## Install
 
