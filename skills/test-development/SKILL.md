@@ -39,8 +39,8 @@ has nothing to report:
   (msw 3). Observation-only spies are fine.
 - No fixed sleeps: await the operation or a signal it emits; drive time with `TestClock`.
 - No `expect.poll` or `vi.waitFor` on recorders or spy state: await the event instead.
-- No retries and no raised timeouts, per test or in config. A test that passes on rerun is a flake
-  to fix.
+- No retries and no raised timeouts, per test or in config: tests run under Vitest's 5s default.
+  A test that passes on rerun, or needs more time, is a problem to fix, not to mask.
 - File names: `*.test.ts` for tests, `*.fixture.ts` for shared fixtures, `*.test-utils.ts` for
   shared helpers. Never `.spec.ts`, `helpers.ts` or `mocks.ts`.
 

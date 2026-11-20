@@ -1,8 +1,10 @@
 import { fileURLToPath } from "node:url";
 
+import { Struct } from "effect";
+
 import defineConfig from "klarity/vitest/node";
 
-export default defineConfig({
+const config = defineConfig({
   root: fileURLToPath(new URL("..", import.meta.url)),
   resolve: { conditions: ["workspace-source"] },
   ssr: { resolve: { conditions: ["workspace-source"] } },
@@ -15,3 +17,6 @@ export default defineConfig({
     // @@end
   },
 });
+
+// WARNING: klarity raises testTimeout to 10s; omitting it keeps Vitest's 5s default (no-flake-masking).
+export default { ...config, test: Struct.omit(config.test ?? {}, ["testTimeout"]) };

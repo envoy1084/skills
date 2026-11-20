@@ -29,7 +29,7 @@ Paths marked **publish** exist only with `publish: true`; **package** ones once 
 | `oxfmtignore` | Generated files (router trees, framework output), the lockfile and changelogs. |
 | `commitlint.config.ts` | klarity's Conventional Commits preset (kebab-case scopes, 100-column lines). |
 | `turbo.json` | `build` (depends on dependencies' builds, caches `dist`, `.output`, `.next`), `dev`, `lint`, `typecheck`, `pack:check`, `clean`. |
-| `vitest.config.ts` | klarity's Node preset at the repository root, `workspace-source` resolution, one project per package. |
+| `vitest.config.ts` | klarity's Node preset at the repository root, `workspace-source` resolution, one project per package. klarity's 10s `testTimeout` is removed so Vitest's 5s default applies, as landmines' `no-flake-masking` expects. |
 
 ## `.github/`
 
