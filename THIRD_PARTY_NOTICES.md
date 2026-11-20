@@ -1,4 +1,4 @@
-These skills are copied unchanged from [t3dotgg/tstack](https://github.com/t3dotgg/tstack) (commit 11e37a7): `full-send`, `file-pr`, `babysit-pr`, `leaving-pr-comments`. They are used under the MIT License below.
+These skills are copied unchanged from [t3dotgg/tstack](https://github.com/t3dotgg/tstack) (commit 11e37a7): `file-pr`, `babysit-pr`, `leaving-pr-comments`. They are used under the MIT License below.
 
 MIT License
 

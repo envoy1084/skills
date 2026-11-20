@@ -24,14 +24,12 @@ Copied unchanged from [t3dotgg/tstack](https://github.com/t3dotgg/tstack) under 
 
 | Skill | Say | What it does |
 |---|---|---|
-| `full-send` | "full send" | Takes a change to a merged PR with nobody watching: proves it, reviews it, files it, babysits it, merges it. |
 | `file-pr` | "file a PR" | Files a short PR that leads with the problem, not an inventory of changes. |
 | `babysit-pr` | "babysit" | Watches a PR through CI and review bots, and fixes the real findings. |
 | `leaving-pr-comments` | (automatic) | Formats comments that an agent posts on your behalf. |
 
 Some skills call others:
 
-- `full-send` uses `file-pr` and `babysit-pr`, and `sol-loop` from tstack (not included here).
 - `file-pr` and `babysit-pr` use `leaving-pr-comments`.
 
 ## Install
