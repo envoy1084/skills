@@ -34,6 +34,7 @@ const platforms = {
   neutral: { tsconfig: "klarity/tsconfig/library", tsdown: "klarity/tsdown/library" },
   node: { tsconfig: "klarity/tsconfig/library/node", tsdown: "klarity/tsdown/node" },
   browser: { tsconfig: "klarity/tsconfig/library/browser", tsdown: "klarity/tsdown/browser" },
+  react: { tsconfig: "klarity/tsconfig/library/react", tsdown: "klarity/tsdown/react" },
 };
 
 const fail = (message) => {
@@ -63,7 +64,7 @@ if (packages.length > 0 && !publish) fail("packages are publishable libraries: s
 if (publish && !/^@[a-z0-9][a-z0-9-._]*$/.test(config.scope ?? "")) fail(`scope must look like @name`);
 for (const pkg of packages) {
   if (!kebab.test(pkg.name ?? "")) fail(`package name "${pkg.name}" must be kebab-case`);
-  if (!(pkg.platform in platforms)) fail(`package "${pkg.name}": platform must be neutral, node or browser`);
+  if (!(pkg.platform in platforms)) fail(`package "${pkg.name}": platform must be neutral, node, browser or react`);
   if (!pkg.description) fail(`package "${pkg.name}": missing description`);
   if (!Array.isArray(pkg.keywords) || pkg.keywords.length === 0) fail(`package "${pkg.name}": missing keywords`);
 }
@@ -134,6 +135,18 @@ const license = readFileSync(join(assets, "licenses", `${config.license}.txt`), 
   .replaceAll("__HOLDER__", config.copyrightHolder);
 write(join(dir, "LICENSE"), license);
 
+// React versions come from assets/template/react.json: pinned in the package when one package uses
+// them, moved to the catalog when several do (the workspace's catalog rule).
+const reactPackages = packages.filter((pkg) => pkg.platform === "react");
+const reactVersions = readJson(join(assets, "template", "react.json"));
+if (reactPackages.length > 1) {
+  const workspaceFile = join(dir, "pnpm-workspace.yaml");
+  const entries = Object.entries(reactVersions.devDependencies).map(
+    ([name, version]) => `  ${name.startsWith("@") ? `"${name}"` : name}: "${version}"`,
+  );
+  write(workspaceFile, readFileSync(workspaceFile, "utf8").replace(/^catalog:\n/m, `catalog:\n${entries.join("\n")}\n`));
+}
+
 for (const pkg of packages) {
   const pkgDir = join(dir, "packages", pkg.name);
   copyLayer(join(assets, "template", "library"), pkgDir);
@@ -142,11 +155,21 @@ for (const pkg of packages) {
   const manifest = readJson(join(pkgDir, "package.json"));
   manifest.keywords = [...new Set(pkg.keywords)].sort();
   if (pkg.platform === "node") manifest.devDependencies = sortKeys({ ...manifest.devDependencies, "@types/node": "catalog:" });
+  if (pkg.platform === "react") {
+    const shared = reactPackages.length > 1;
+    const devDependencies = Object.fromEntries(
+      Object.entries(reactVersions.devDependencies).map(([name, version]) => [name, shared ? "catalog:" : version]),
+    );
+    manifest.devDependencies = sortKeys({ ...manifest.devDependencies, ...devDependencies });
+    manifest.peerDependencies = sortKeys({ ...manifest.peerDependencies, ...reactVersions.peerDependencies });
+    manifest.exports["."]["workspace-source"] = "./src/index.tsx";
+  }
   writeJson(join(pkgDir, "package.json"), manifest);
 
   const tsconfig = readJson(join(pkgDir, "tsconfig.json"));
   tsconfig.extends = platforms[pkg.platform].tsconfig;
   tsconfig.compilerOptions = { ...tsconfig.compilerOptions, ...(pkg.platform === "node" ? { types: ["node"] } : {}) };
+  if (pkg.platform === "react") tsconfig.include = ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"];
   writeJson(join(pkgDir, "tsconfig.json"), tsconfig);
 
   const tsdown = readFileSync(join(pkgDir, "tsdown.config.ts"), "utf8").replace("__TSDOWN_PRESET__", platforms[pkg.platform].tsdown);
@@ -166,12 +189,15 @@ const tokens = {
   __LICENSE__: config.license,
   __LICENSE_NAME__: licenses[config.license],
   __EFFECT_VERSION__: catalogEffect,
+  __REACT_FILES__: reactPackages.map((pkg) => `"**/packages/${pkg.name}/**"`).join(", "),
 };
 
 // Line tokens expand to one line per package (with the token's indentation), or disappear.
 const lineTokens = {
-  __VITEST_PROJECTS__: packages.map(
-    (pkg) => `{ extends: true, test: { name: "${pkg.name}", root: "packages/${pkg.name}", include: ["test/**/*.test.ts"] } },`,
+  __VITEST_PROJECTS__: packages.map((pkg) =>
+    pkg.platform === "react"
+      ? `{ extends: true, test: { name: "${pkg.name}", root: "packages/${pkg.name}", include: ["test/**/*.test.{ts,tsx}"], environment: "jsdom", css: true } },`
+      : `{ extends: true, test: { name: "${pkg.name}", root: "packages/${pkg.name}", include: ["test/**/*.test.ts"] } },`,
   ),
   __PACKAGES_TABLE__: packages.map(
     (pkg) => `| [\`${scope}/${pkg.name}\`](./packages/${pkg.name}/README.md) | ${pkg.description} |`,
@@ -181,14 +207,14 @@ const lineTokens = {
   __REPO_STRUCTURE__: packages.map((pkg) => `${`packages/${pkg.name}/`.padEnd(15)} ${scope}/${pkg.name}: ${pkg.description}`),
 };
 
-// `@@publish` / `@@library` … `@@end` lines bound blocks kept only when the condition holds.
-const conditions = { publish, library: packages.length > 0 };
+// `@@publish` / `@@library` / `@@react` … `@@end` lines bound blocks kept only when the condition holds.
+const conditions = { publish, library: packages.length > 0, react: reactPackages.length > 0 };
 
 const render = (text, pkg) => {
   const lines = [];
   let keep = true;
   for (const line of text.split("\n")) {
-    const marker = /@@(publish|library|end)\b/.exec(line)?.[1];
+    const marker = /@@(publish|library|react|end)\b/.exec(line)?.[1];
     if (marker !== undefined) {
       keep = marker === "end" ? true : conditions[marker];
       continue;

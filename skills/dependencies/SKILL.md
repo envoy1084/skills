@@ -10,9 +10,10 @@ These conventions are for pnpm + Turborepo + Effect v4 workspaces. When the repo
 
 1. **Exact pins.** Every version in a package.json or the catalog is exact (`4.1.5`, not
    `^4.1.5`). `.npmrc` sets `save-exact=true`.
-2. **Latest release.** Add and upgrade to the latest version. When something blocks the latest
-   (a peer range, a regression), pin the newest working version and leave a one-line comment in
-   `pnpm-workspace.yaml` or the PR saying why.
+2. **Latest release, upgrades on request.** A newly added dependency uses its latest version.
+   Existing pins are upgraded only when the user asks; then go to the latest. When something blocks
+   the latest (a peer range, a regression), pin the newest working version and leave a one-line
+   comment in `pnpm-workspace.yaml` or the PR saying why.
 3. **Ranges for published libraries.** A published package's `dependencies` and
    `peerDependencies` use ranges that cover the versions it supports (`^4.1.5`, `>=2.14.0 <4`), so
    consumers are not forced onto one exact version. Its `devDependencies` stay exact.

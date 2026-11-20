@@ -43,7 +43,7 @@
 | `packages[].name` | yes | kebab-case folder and package name (`<scope>/<name>`). |
 | `packages[].description` | yes | One sentence for npm, README tables and the workspace map. |
 | `packages[].keywords` | yes | 3–10 specific npm search terms; deduplicated and sorted. |
-| `packages[].platform` | yes | `neutral` (runtime-agnostic), `node` (adds Node types) or `browser`. |
+| `packages[].platform` | yes | `neutral` (runtime-agnostic), `node` (adds Node types), `browser`, or `react` (React presets, `.tsx` entry, jsdom tests, `react` peer). |
 
 ## What the script fills in
 
@@ -56,10 +56,12 @@
 | `__EFFECT_VERSION__` | The catalog's `effect` version, for library peer ranges |
 | `__PKG__`, `__PKG_DESCRIPTION__` | Per package, inside `packages/<name>` |
 | `__TSDOWN_PRESET__` and the tsconfig `extends` | From `platform` |
+| `__REACT_FILES__` | Globs of the `react` packages, for the oxlint React override |
 
 Line placeholders expand to one line per package, or vanish when there are none:
 `__VITEST_PROJECTS__`, `__PACKAGES_TABLE__`, `__PACKAGE_OPTIONS__`, `__WORKSPACE_MAP__`,
 `__REPO_STRUCTURE__`.
 
-Blocks between a line containing `@@publish` (or `@@library`, meaning at least one package) and a
+Blocks between a line containing `@@publish` (or `@@library`, meaning at least one package, or
+`@@react`, meaning at least one React package) and a
 line containing `@@end` are kept only when the condition holds; the marker lines are always removed.

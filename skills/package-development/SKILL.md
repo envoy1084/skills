@@ -83,7 +83,8 @@ existing package of the same kind (a published library, private tooling, or an a
 `@effect/language-service` plugin block of the neighbouring packages.
 
 Published libraries build with tsdown through the matching klarity factory (`klarity/tsdown/library`,
-`/node`, `/browser`, `/react`):
+`/node`, `/browser`, `/react`). React packages use `src/index.tsx`, `react` as a ranged peer
+dependency, a jsdom Vitest project and an oxlint override with klarity's React preset:
 
 ```ts
 import defineConfig from "klarity/tsdown/library";

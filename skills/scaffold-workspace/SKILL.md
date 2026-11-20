@@ -69,7 +69,7 @@ AskUserQuestion tool when available, with your inferred values as the recommende
 | Code owners | `@<gh login>` | Only if a team owns it |
 | Publishes npm packages? | The request ("library", "sdk", "package" → yes; "app", "service", "site" → no) | Confirm |
 | npm scope | `@<name>` | When publishing: confirm, and check it is free (below) |
-| Packages | The request | When publishing: each package's name, one-line description, platform (`neutral`, `node`, `browser`) and 3–10 keywords |
+| Packages | The request | When publishing: each package's name, one-line description, platform (`neutral`, `node`, `browser`, `react`) and 3–10 keywords |
 | **License** | Never infer | **Always ask**: MIT, Apache-2.0, ISC, BSD-3-Clause, or UNLICENSED (proprietary) |
 | Copyright holder | `git config user.name` | Confirm (a company name is common) |
 | Author | `git config user.name` + `https://github.com/<login>` | Confirm |
@@ -78,8 +78,10 @@ Check npm names before committing to them: `npm view <scope>/<package> name` ret
 the name is free; for a new scope, the user must own the npm user or organisation of that name.
 
 Platform: `neutral` for runtime-agnostic libraries (the default), `node` when the package uses Node
-APIs, `browser` for DOM code. React component packages: use `browser`, then follow the
-package-development skill to switch to klarity's React presets.
+APIs, `browser` for DOM code, `react` for React component packages. A `react` package gets klarity's
+React tsconfig, tsdown (React externalized) and oxlint presets (hooks, jsx-a11y, react-perf),
+`src/index.tsx`, `react` as a ranged peer dependency, and jsdom + Testing Library tests. Its React
+versions are pinned in the package, or moved to the catalog when several packages use React.
 
 Apps (Next.js, TanStack Start, …) are not rendered by the script. Scaffold the workspace first, then
 add each app as described in [references/apps.md](references/apps.md).
@@ -97,25 +99,15 @@ LICENSE with the year and holder, fills every placeholder, expands the package l
 issue-form dropdown, Vitest projects, workspace maps) and drops publish-only sections when not
 publishing. It fails on any placeholder left behind.
 
-## Step 3: Install and refresh versions
+## Step 3: Install
 
-The templates pin versions that were latest when the skill was written. Bring them up to date:
+Use the versions pinned in the templates as they are. Do not upgrade anything (no `pnpm up
+--latest`, no Node or pnpm bumps) unless the user explicitly asks for latest versions; then follow
+[references/versions.md](references/versions.md).
 
 1. `cd <dir> && git init -b main` (lefthook installs hooks during `pnpm install`, which needs git).
-2. Update `.node-version` to the latest Node.js LTS
-   (`curl -s https://nodejs.org/dist/index.json`, first entry with `lts` set) and
-   `packageManager` in `package.json` to `pnpm@<npm view pnpm version>`. Update the Node and pnpm
-   versions mentioned in README.md and CONTRIBUTING.md if their major changed.
-3. `pnpm install`. It runs `prepare`: lefthook installs the hooks and `effect-tsgo` patches
+2. `pnpm install`. It runs `prepare`: lefthook installs the hooks and `effect-tsgo` patches
    TypeScript and oxlint. Both must report success.
-4. `pnpm outdated -r`, then `pnpm up -r --latest` to move every pin (catalog included) to its latest
-   release. Versions younger than a day stay back because of `minimumReleaseAge`, except Effect and
-   the Oxc tools; that is intended.
-5. Set each library's `peerDependencies.effect` to `^<catalog effect version>`.
-6. If a new major of anything breaks the check in step 5, pin the last working version, and add a
-   one-line comment in `pnpm-workspace.yaml` (or tell the user, for root pins) saying why.
-
-GitHub Action versions are left to Dependabot.
 
 ## Step 4: Write the first code
 
@@ -168,10 +160,11 @@ the next steps that need them:
 
 ## Troubleshooting
 
-- **`ERR_PNPM_…MINIMUM_RELEASE_AGE` or "no matching version"**: a release is younger than a day. Wait,
-  or pin the previous version; add an exclusion only for packages the policy already exempts.
+- **`ERR_PNPM_…MINIMUM_RELEASE_AGE` or "no matching version"**: a pinned release is younger than a
+  day (only after a version update). Wait, or pin the previous version; add an exclusion only for
+  packages the policy already exempts.
 - **`effect-tsgo patch` fails during `prepare`**: `@effect/tsgo` and `typescript` are out of step.
-  Update both to latest, reinstall.
+  Tell the user; with their go-ahead, update both together (references/versions.md) and reinstall.
 - **tsdown fails on a warning**: klarity builds with `failOnWarn`. The templates suppress the two
   known TypeScript 7.0 generator warnings; once TypeScript 7.1 is stable, remove those suppressions
   instead of adding new ones. Any other warning is a real problem to fix.

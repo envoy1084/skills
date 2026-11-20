@@ -55,5 +55,6 @@ Paths marked **publish** exist only with `publish: true`; **package** ones once 
 | `tools/cli/` | **publish** — `<scope>/tools`, private, bin `<name>-dev`, run from source by Node. `release check --pack-dir` (plan vs publishable packages, integrity, publint, attw, consumer install, import every entry, writes `verification.json`) and `release smoke --pack-dir [--provenance <repo url>]`. |
 | `packages/<name>/package.json` | **package** — Description, keywords, homepage, bugs, license, author, repository with `directory`, `files`, `sideEffects: false`, `exports` with `workspace-source` → `src` and `publishConfig.exports` → `dist`, provenance, `effect` peer range, tsdown/publint/attw scripts. |
 | `packages/<name>/tsconfig.json` | **package** — klarity library preset for the platform, `workspace-source` condition, Effect language service plugin. |
+| React packages | **package** — `src/index.tsx` entry, `react` peer range, React, React DOM, their types, jsdom and Testing Library as dev dependencies (catalog when several packages use them), a jsdom Vitest project, and klarity's React oxlint preset as an override. |
 | `packages/<name>/tsdown.config.ts` | **package** — klarity tsdown factory for the platform with `devExports: "workspace-source"`. |
 | `packages/<name>/README.md`, `LICENSE` | **package** — Install, usage (written in step 4), license. |

@@ -2,6 +2,9 @@ import { presets } from "@effect/tsgo/oxlint-presets";
 
 import landmines from "@interfere/landmines/configs/recommended.json" with { type: "json" };
 import config from "klarity/oxlint";
+// @@react
+import reactConfig from "klarity/oxlint/react";
+// @@end
 import { defineConfig } from "oxlint";
 
 // WARNING: the Effect presets and type-aware rules need `effect-tsgo patch --oxlint` (run by `prepare`).
@@ -37,5 +40,13 @@ export default defineConfig({
       files: ["**/tools/**"],
       rules: { "effecttsgo/missing-pipeable-signature": "off" },
     },
+    // @@react
+    {
+      files: [__REACT_FILES__],
+      plugins: reactConfig.plugins,
+      env: reactConfig.env,
+      rules: reactConfig.rules,
+    },
+    // @@end
   ],
 });
