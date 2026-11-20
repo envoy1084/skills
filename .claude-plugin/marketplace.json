@@ -1,6 +1,8 @@
 {
   "name": "envoy-skills",
-  "owner": { "name": "Vedant Chainani" },
+  "owner": {
+    "name": "Vedant Chainani"
+  },
   "description": "envoy1084's skills, plus the external skills they build on, pinned to tested commits.",
   "plugins": [
     {
@@ -16,7 +18,11 @@
         "path": "skills",
         "sha": "11e37a74d0a6868c121cd0910ab2b3bd9873b92a"
       },
-      "skills": ["./file-pr", "./babysit-pr", "./leaving-pr-comments"],
+      "skills": [
+        "./file-pr",
+        "./babysit-pr",
+        "./leaving-pr-comments"
+      ],
       "description": "From t3dotgg/tstack: file short PRs, babysit them through CI and review, and format agent comments."
     },
     {
@@ -28,21 +34,16 @@
         "sha": "64eb3deb9a5fbfa041faf783e0bc3fd635872e9c"
       },
       "skills": [
-        "./animate",
         "./animation-performance",
         "./animation-vocabulary",
         "./apple-design",
-        "./ask-emil",
         "./ask-sonner",
-        "./break-ui",
         "./choreograph",
-        "./emil-design-eng",
         "./find-animation-opportunities",
         "./gestures",
         "./improve-animations",
         "./learn-taste",
         "./pick-ui-library",
-        "./prototype",
         "./remove-animations",
         "./review-animations"
       ],
@@ -81,7 +82,9 @@
         "path": "skills",
         "sha": "57217cf86ba38148a57af9e90d14a4c049558330"
       },
-      "skills": ["./find-skills"],
+      "skills": [
+        "./find-skills"
+      ],
       "description": "From vercel-labs/skills: discover and install more skills."
     }
   ]

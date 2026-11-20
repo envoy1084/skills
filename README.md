@@ -25,7 +25,7 @@ not copied into this repository.
 | Source | Skills | For |
 |---|---|---|
 | [t3dotgg/tstack](https://github.com/t3dotgg/tstack) | `file-pr`, `babysit-pr`, `leaving-pr-comments` | Filing PRs, driving them through CI and review |
-| [emilkowalski/skills](https://github.com/emilkowalski/skills) | `animate`, `animation-performance`, `animation-vocabulary`, `apple-design`, `ask-emil`, `ask-sonner`, `break-ui`, `choreograph`, `emil-design-eng`, `find-animation-opportunities`, `gestures`, `improve-animations`, `learn-taste`, `pick-ui-library`, `prototype`, `remove-animations`, `review-animations` | Animation and design-engineering polish |
+| [emilkowalski/skills](https://github.com/emilkowalski/skills) | `animation-performance`, `animation-vocabulary`, `apple-design`, `ask-sonner`, `choreograph`, `find-animation-opportunities`, `gestures`, `improve-animations`, `learn-taste`, `pick-ui-library`, `remove-animations`, `review-animations` | Specialised motion: choreography, gestures, performance, reviews |
 | [jakubkrehel/skills](https://github.com/jakubkrehel/skills) | `better-accessibility`, `better-colors`, `better-interface`, `better-layout`, `better-motion`, `better-typography`, `better-ui`, `better-writing`, `break`, `build-design`, `explain-interface`, `interface-review`, `variant` | Interface quality |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | `find-skills` | Finding more skills |
 
@@ -39,6 +39,11 @@ The list lives in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace
 `install.sh` installs it as `~/.codex/AGENTS.md` (Codex) and links `~/.claude/CLAUDE.md` (Claude
 Code) to it. Existing files that differ are backed up first. Run from a clone, it links to the
 clone, so edits apply immediately. Set `SKIP_AGENTS_MD=1` to skip this step.
+
+Where two collections cover the same job, one is kept: `break` over `break-ui`, `variant` over
+`prototype`, `better-motion` over `animate`, and `better-interface`, `interface-review` and
+`better-ui` over `emil-design-eng` and `ask-emil`. jakubkrehel's skills hand work to each other, so
+that collection stays whole.
 
 ## Install
 
