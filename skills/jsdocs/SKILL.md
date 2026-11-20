@@ -74,8 +74,9 @@ Declarations under `src/internal/` and anything marked `@internal` are outside p
 
 ## Modules
 
-The first block in a module file documents the module: a short paragraph, then `@stability` and
-`@since`. The matching `export * as X` in `index.ts` carries the same two tags.
+Module documentation goes on the `export * as X from "./X.ts"` in `index.ts`: a short paragraph,
+then `@stability` and `@since`. Module files have no leading comment block, and non-exported
+declarations get no TSDoc: landmines' `no-comments` rule allows TSDoc on exported symbols only.
 
 ## Examples
 

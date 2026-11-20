@@ -28,6 +28,22 @@ These conventions are for pnpm + Turborepo + Effect v4 workspaces. When the repo
   Do not write `Effect.promise` or `async` tests.
 - Yield into a `const` first, then assert: `const slug = yield* Slug.make("x");`.
 
+## Tests that cannot lie
+
+Projects lint tests with [landmines](https://github.com/interfere-inc/landmines). Write them so it
+has nothing to report:
+
+- No test doubles: no module mocks, `vi.fn(impl)`, stubbed globals or patched prototypes. Use the
+  real implementation, or a real alternative implementation provided as a test `Layer`. For the
+  network, use MSW with `onUnhandledRequest: "error"` (msw 2) or `onUnhandledFrame: "error"`
+  (msw 3). Observation-only spies are fine.
+- No fixed sleeps: await the operation or a signal it emits; drive time with `TestClock`.
+- No `expect.poll` or `vi.waitFor` on recorders or spy state: await the event instead.
+- No retries and no raised timeouts, per test or in config. A test that passes on rerun is a flake
+  to fix.
+- File names: `*.test.ts` for tests, `*.fixture.ts` for shared fixtures, `*.test-utils.ts` for
+  shared helpers. Never `.spec.ts`, `helpers.ts` or `mocks.ts`.
+
 ## What to test
 
 Write the tests a behaviour needs: the documented contract, its failure cases and regressions.

@@ -34,6 +34,9 @@ guidance, or the search has established that none exists.
 
 ## API conventions
 
+Do not annotate return types on implementations (`no-explicit-return-types` in landmines): let
+`Effect.fn` and TypeScript infer them, and use `satisfies` where a contract must be pinned.
+
 Write option types inline in the signature by default. Mark fields `readonly` and add
 `| undefined` to optional fields:
 

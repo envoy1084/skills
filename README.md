@@ -15,6 +15,7 @@ they work in Claude Code, Codex, and other agents that support skills.
 | `package-development` | "add a package" | Adds or publishes a workspace package with full npm metadata and a tsdown build. |
 | `dependencies` | (automatic) | Pins exact latest versions, keeps the pnpm catalog for shared deps, ranges for libraries. |
 | `changesets` | (automatic) | Writes changesets and picks the version bump for published packages. |
+| `scaffold-workspace` | "scaffold a new project" | Creates a pnpm + Turborepo + TS 7 + Effect v4 monorepo with klarity, landmines, hardened GitHub workflows and, for npm packages, verified provenance releases. |
 
 ### From tstack
 

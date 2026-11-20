@@ -68,6 +68,7 @@ existing package of the same kind (a published library, private tooling, or an a
 }
 ```
 
+- Name every entry point explicitly; never export `"./*"` (landmines' `package-exports` rule).
 - Every subpath entry appears in both `exports` (with `workspace-source` pointing at `src`) and
   `publishConfig.exports` (pointing at `dist`).
 - `effect` is a peer dependency of libraries so consumers share one copy; it is also a
@@ -88,10 +89,8 @@ Published libraries build with tsdown through the matching klarity factory (`kla
 import defineConfig from "klarity/tsdown/library";
 
 export default defineConfig({
-  // `exports` keeps pointing at `src` under `workspace-source`; built entries go to
-  // `publishConfig.exports`.
   exports: { devExports: "workspace-source" },
-  // TypeScript 7.0's declaration generator warns on every build; drop these once on TS 7.1+.
+  // WARNING: drop these once TypeScript 7.1 is stable; never suppress any other warning.
   suppressWarnings: [
     /^TypeScript 7\.0 does not yet have a stable API and is experimental\. Some options will be unavailable\.$/,
     /^The `tsgo` generator on TypeScript 7\.0 is deprecated/,
@@ -99,7 +98,8 @@ export default defineConfig({
 });
 ```
 
-Add an `entry` map for subpath exports (`{ index: "src/index.ts", effect: "src/effect.ts" }`);
+`devExports` keeps `exports` pointing at `src` under the `workspace-source` condition and writes
+the built entries to `publishConfig.exports`. Add an `entry` map for subpath exports (`{ index: "src/index.ts", effect: "src/effect.ts" }`);
 tsdown regenerates `exports` and `publishConfig.exports` from it on every build. Use plain `tsc`
 only when a package needs one output file per source file (for example to keep `export * as`
 re-exports tree-shakeable for app bundlers), and say why in its README.

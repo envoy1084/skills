@@ -14,8 +14,9 @@ data type with constructors, `Context.ts` for services) and follow them.
 
 - One public concept per module file, named after the concept in PascalCase: `Slug.ts`,
   `HttpClient.ts`. The module's main type shares its name (`Slug.Slug`, like `Duration.Duration`).
-- `src/index.ts` re-exports each module as a namespace, each with a module TSDoc block:
-  `export * as Slug from "./Slug.ts";`. Consumers write `Slug.make(...)`.
+- `src/index.ts` re-exports each module as a namespace and carries the module's TSDoc (with
+  `@stability` and `@since`): `export * as Slug from "./Slug.ts";`. Consumers write
+  `Slug.make(...)`. Module files themselves start with their imports, no module comment block.
 - Implementation details that several modules share live in `src/internal/` with camelCase file
   names (`internal/slugify.ts`). They are never exported from a package entry.
 - Each file has one responsibility. Split by concept, not by kind (no `types.ts`, `utils.ts`,
@@ -49,7 +50,6 @@ export class EmptySlugError extends Schema.TaggedError<
   input: Schema.String,
 }) {}
 
-// Fail with `make`, and return so control flow ends visibly.
 if (Option.isNone(words)) return yield * EmptySlugError.make({ input: text });
 ```
 
@@ -96,10 +96,14 @@ export class Tools extends Context.Service<
 - Prefer early returns over nested conditionals.
 - Yield effects into a `const` before passing the value to a call (`effecttsgo/yield-in-call-argument`).
 
-## Comments
+## Comments and types
 
-- Comment only non-obvious constraints, invariants, ordering or lifecycle decisions, and why a rule
-  is disabled.
-- No comments that restate the code, section banners, TODO roadmaps or phase labels.
-- Public declarations get TSDoc (see the `jsdocs` skill); internal ones get a one-line `/** */`
-  when the name alone does not explain the contract.
+Projects lint with [landmines](https://github.com/interfere-inc/landmines), so:
+
+- No prose comments. Make the code say it (names, small functions, types) and put rationale in the
+  commit message or PR. Allowed: functional directives (`oxlint-disable-next-line … -- reason`,
+  `@ts-expect-error`, `@effect-diagnostics-next-line`), a single-line `// WARNING:` for a
+  dangerous, recurring footgun, and TSDoc on exported symbols (see the `jsdocs` skill).
+- No annotated return types on implementations: let TypeScript infer them, and use `satisfies` to
+  pin a contract where it matters.
+- Never disable a landmines rule to get a check green; do what its message says.
