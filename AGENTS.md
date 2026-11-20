@@ -1,8 +1,8 @@
 # envoy1084/skills
 
 Agent skills (`skills/`), the external skills they build on (`.claude-plugin/marketplace.json`),
-the global agent instructions (`global/AGENTS.md`) and the installer that sets them all up
-(`install.sh`).
+the interactive installer for both (`install.sh`), and a backup of the global agent instructions
+(`global/AGENTS.md`).
 
 - When the user installs or removes skills globally, or edits their global AGENTS.md, follow
   `.agents/skills/sync-skills/SKILL.md`.

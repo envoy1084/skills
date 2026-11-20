@@ -7,10 +7,11 @@ metadata:
 
 # Sync skills
 
-This repository installs three things: its own skills (`skills/`), external skills pinned in
-`.claude-plugin/marketplace.json` (which `install.sh` also reads), and the global agent instructions
-in `global/AGENTS.md`. The user installs and edits these on their machine first; this skill brings
-the repository in line with what they have, so `install.sh` and the marketplace reproduce it.
+This repository installs its own skills (`skills/`) and external skills pinned in
+`.claude-plugin/marketplace.json` (which `install.sh` also reads), and keeps a backup of the global
+agent instructions in `global/AGENTS.md`. The user installs and edits these on their machine first;
+this skill brings the repository in line with what they have, so `install.sh` and the marketplace
+reproduce it and the backup stays current.
 
 ## 1. Report
 
@@ -91,7 +92,7 @@ marketplace:
    ```sh
    npx_dir=$(dirname "$(mise which npx 2>/dev/null || command -v npx)")
    home=$(mktemp -d)
-   env HOME="$home" PATH="$npx_dir:/usr/bin:/bin" DISABLE_TELEMETRY=1 sh ./install.sh -a claude-code
+   env HOME="$home" PATH="$npx_dir:/usr/bin:/bin" DISABLE_TELEMETRY=1 sh ./install.sh --yes -a claude-code
    ls "$home/.claude/skills" | wc -l   # own skills + every skill listed in the marketplace
    ```
 

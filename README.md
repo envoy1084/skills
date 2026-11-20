@@ -33,17 +33,15 @@ The list lives in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace
 `install.sh` reads it. To pull in skills you installed globally, ask an agent in this repository to
 "sync skills" (the repository-only `sync-skills` skill in `.agents/skills`).
 
-## Global agent instructions
-
-[`global/AGENTS.md`](global/AGENTS.md) holds the instructions every agent follows on every project.
-`install.sh` installs it as `~/.codex/AGENTS.md` (Codex) and links `~/.claude/CLAUDE.md` (Claude
-Code) to it. Existing files that differ are backed up first. Run from a clone, it links to the
-clone, so edits apply immediately. Set `SKIP_AGENTS_MD=1` to skip this step.
-
 Where two collections cover the same job, one is kept: `break` over `break-ui`, `variant` over
 `prototype`, `better-motion` over `animate`, and `better-interface`, `interface-review` and
 `better-ui` over `emil-design-eng` and `ask-emil`. jakubkrehel's skills hand work to each other, so
 that collection stays whole.
+
+## Global agent instructions
+
+[`global/AGENTS.md`](global/AGENTS.md) is a backup of my global agent instructions
+(`~/.codex/AGENTS.md`, with `~/.claude/CLAUDE.md` linked to it). The installer does not touch them.
 
 ## Install
 
@@ -53,8 +51,22 @@ that collection stays whole.
 curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh
 ```
 
-This runs `npx skills add` for this repository and each external source, globally and without
-prompts, then installs the global agent instructions. Extra flags go to every `skills add`, for example `sh install.sh -a claude-code -a codex`.
+It asks three things, then runs `npx skills add` for each chosen collection:
+
+1. **Which collections**: this repository's skills and each external source (Enter for all).
+2. **Where**: globally in your home folder, or into the current project.
+3. **Which agents**: defaults to the agents found on the machine (Claude Code, Codex, Cursor,
+   OpenCode, Gemini CLI, …); type any [agent id](https://github.com/vercel-labs/skills/blob/main/docs/agents.md).
+
+Flags answer the questions up front, and without a terminal the defaults apply (all collections,
+global, detected agents; it stops if it finds no agent rather than installing for all of them):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh -s -- --yes
+curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh -s -- -a claude-code -a codex --only envoy-skills,interfaces
+curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh -s -- --project
+```
+
 To install only this repository's skills: `npx skills add envoy1084/skills`.
 
 ### Claude Code plugins
