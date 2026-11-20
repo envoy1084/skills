@@ -16,25 +16,47 @@ they work in Claude Code, Codex, and other agents that support skills.
 | `dependencies` | (automatic) | Pins exact latest versions, keeps the pnpm catalog for shared deps, ranges for libraries. |
 | `changesets` | (automatic) | Writes changesets and picks the version bump for published packages. |
 
+### From tstack
+
+Copied unchanged from [t3dotgg/tstack](https://github.com/t3dotgg/tstack) under its MIT license (see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
+
+| Skill | Say | What it does |
+|---|---|---|
+| `full-send` | "full send" | Takes a change to a merged PR with nobody watching: proves it, reviews it, files it, babysits it, merges it. |
+| `file-pr` | "file a PR" | Files a short PR that leads with the problem, not an inventory of changes. |
+| `babysit-pr` | "babysit" | Watches a PR through CI and review bots, and fixes the real findings. |
+| `leaving-pr-comments` | (automatic) | Formats comments that an agent posts on your behalf. |
+
+Some skills call others:
+
+- `full-send` uses `file-pr` and `babysit-pr`, and `sol-loop` from tstack (not included here).
+- `file-pr` and `babysit-pr` use `leaving-pr-comments`.
+
 ## Install
 
-Clone the repo and symlink the skills into your agent's skills folder. Symlinks
-mean edits in this repo take effect immediately.
+```bash
+npx skills add envoy1084/skills
+```
+
+### Requirements
+
+- An authenticated [GitHub CLI](https://cli.github.com) (`gh`) for the PR skills.
+- `python3` for `babysit-pr`'s `pr-wait` script.
+
+### Developing the skills
+
+To edit the skills and use them at the same time, clone the repo and symlink each skill into your
+agent's skills folder, so edits take effect immediately:
 
 ```bash
-git clone <repo-url> ~/Projects/Personal/skills
+git clone https://github.com/envoy1084/skills ~/Projects/Personal/skills
 cd ~/Projects/Personal/skills
 
 for skill in skills/*/; do
   ln -sfn "$PWD/$skill" ~/.claude/skills/"$(basename "$skill")"   # Claude Code
   ln -sfn "$PWD/$skill" ~/.codex/skills/"$(basename "$skill")"    # Codex
 done
-```
-
-To copy them instead of linking:
-
-```bash
-cp -R skills/* ~/.claude/skills/
 ```
 
 ## Make them yours
