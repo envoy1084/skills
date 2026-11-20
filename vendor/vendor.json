@@ -65,6 +65,24 @@
         "find-skills"
       ],
       "description": "From vercel-labs/skills: discover and install more skills."
+    },
+    {
+      "name": "pstack",
+      "repo": "cursor/plugins",
+      "commit": "aaeb0ea3a0584995aa8f55ce44c6c5259414b896",
+      "path": "pstack/skills",
+      "skills": [
+        "benchmark-checklist",
+        "blast-radius",
+        "correct",
+        "create-formal-verification-skill",
+        "maintain-formal-verification-skill",
+        "tdd",
+        "technical-writing",
+        "unslop",
+        "why"
+      ],
+      "description": "From cursor/plugins (pstack by poteto): prove changes safe, encode repeated mistakes as checks, regression-first fixes, benchmarks, formal verification and plain technical writing."
     }
   ]
 }

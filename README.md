@@ -29,6 +29,7 @@ the skills above.
 | [emilkowalski/skills](https://github.com/emilkowalski/skills) | `animation-performance`, `animation-vocabulary`, `apple-design`, `ask-sonner`, `choreograph`, `find-animation-opportunities`, `gestures`, `improve-animations`, `learn-taste`, `pick-ui-library`, `remove-animations`, `review-animations` | Specialised motion: choreography, gestures, performance, reviews |
 | [jakubkrehel/skills](https://github.com/jakubkrehel/skills) | `better-accessibility`, `better-colors`, `better-interface`, `better-layout`, `better-motion`, `better-typography`, `better-ui`, `better-writing`, `break`, `build-design`, `explain-interface`, `interface-review`, `variant` | Interface quality |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | `find-skills` | Finding more skills |
+| [cursor/plugins](https://github.com/cursor/plugins/tree/main/pstack) (pstack) | `benchmark-checklist`, `blast-radius`, `correct`, `create-formal-verification-skill`, `maintain-formal-verification-skill`, `tdd`, `technical-writing`, `unslop`, `why` | Proving changes safe, turning repeated mistakes into checks, regression-first fixes, benchmarks, formal verification, technical writing. Run them by name (`/blast-radius`); they do not trigger on their own. |
 
 Where two collections cover the same job, one is kept: `break` over `break-ui`, `variant` over
 `prototype`, `better-motion` over `animate`, and `better-interface`, `interface-review` and
@@ -54,6 +55,7 @@ everything without questions: `npx skills add envoy1084/skills --skill '*' -g -y
 /plugin install emil-design-engineering@envoy-skills
 /plugin install interfaces@envoy-skills
 /plugin install find-skills@envoy-skills
+/plugin install pstack@envoy-skills
 ```
 
 Each collection is its own plugin. Third-party marketplaces do not auto-update; run

@@ -29,6 +29,11 @@
       "name": "find-skills",
       "source": "./vendor/find-skills",
       "description": "From vercel-labs/skills: discover and install more skills."
+    },
+    {
+      "name": "pstack",
+      "source": "./vendor/pstack",
+      "description": "From cursor/plugins (pstack by poteto): prove changes safe, encode repeated mistakes as checks, regression-first fixes, benchmarks, formal verification and plain technical writing."
     }
   ]
 }
