@@ -1,0 +1,31 @@
+{
+  "name": "envoy-skills",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm sync --check",
+    "format": "oxfmt -c .config/oxfmt.config.ts --write .config tools package.json pnpm-workspace.yaml tsconfig.json",
+    "format:check": "oxfmt -c .config/oxfmt.config.ts --check .config tools package.json pnpm-workspace.yaml tsconfig.json",
+    "lint": "pnpm -r lint",
+    "prepare": "effect-tsgo patch --typescript --oxlint",
+    "report": "skills-dev report",
+    "sync": "skills-dev sync",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "catalog:",
+    "@envoy1084/skills-tools": "workspace:*",
+    "@interfere/landmines": "catalog:",
+    "@types/node": "catalog:",
+    "klarity": "catalog:",
+    "oxfmt": "0.79.0",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "packageManager": "pnpm@12.21.0"
+}

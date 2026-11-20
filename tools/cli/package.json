@@ -1,0 +1,21 @@
+{
+  "name": "@envoy1084/skills-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Repository tooling for envoy1084/skills: vendor external skills and compare with global installs",
+  "bin": {
+    "skills-dev": "./src/bin.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint -c ../../.config/oxlint.config.ts --deny-warnings .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

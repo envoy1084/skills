@@ -1,0 +1,25 @@
+packages:
+  - "tools/*"
+
+catalog:
+  "@effect/platform-node": "4.1.5"
+  "@effect/tsgo": "0.73.2"
+  "@interfere/landmines": "0.1.1"
+  "@types/node": "26.6.6"
+  effect: "4.1.5"
+  klarity: "0.3.0"
+  oxlint: "1.94.0"
+  oxlint-tsgolint: "7.0.2007"
+  typescript: "7.0.2"
+
+minimumReleaseAge: 1440
+
+minimumReleaseAgeExclude:
+  - effect
+  - "@effect/*"
+  - oxlint
+  - "@oxlint/*"
+  - oxlint-tsgolint
+  - "@oxlint-tsgolint/*"
+  - oxfmt
+  - "@oxfmt/*"
