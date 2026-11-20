@@ -95,18 +95,23 @@ const stage = Effect.fn("sync.stage")(function* (collection: Collection, work: s
     yield* fs.copy(from, path.join(staged, "skills", skill));
   }
 
-  const files = yield* fs.readDirectory(source);
-  const license = Arr.findFirst(files, (file) =>
-    /^(LICENSE|LICENCE|COPYING)(\.md|\.txt)?$/i.test(file),
+  const segments = Arr.filter(Str.split("/")(collection.path), Str.isNonEmpty);
+  const candidates = Arr.map(Arr.range(0, segments.length), (depth) =>
+    path.join(source, ...Arr.take(segments, segments.length - depth)),
   );
-  if (license._tag === "None") {
-    return yield* SetupError.make({
-      message: `${collection.name}: ${collection.repo} has no LICENSE; do not vendor it`,
-    });
+  for (const dir of candidates) {
+    const files = yield* fs.readDirectory(dir);
+    const license = Arr.findFirst(files, (file) =>
+      /^(LICENSE|LICENCE|COPYING)(\.md|\.txt)?$/i.test(file),
+    );
+    if (license._tag === "None") continue;
+    yield* fs.copyFile(path.join(dir, license.value), path.join(staged, "LICENSE"));
+    yield* fs.writeFileString(path.join(staged, "SOURCE.md"), sourceNote(collection));
+    return staged;
   }
-  yield* fs.copyFile(path.join(source, license.value), path.join(staged, "LICENSE"));
-  yield* fs.writeFileString(path.join(staged, "SOURCE.md"), sourceNote(collection));
-  return staged;
+  return yield* SetupError.make({
+    message: `${collection.name}: no LICENSE in ${collection.repo}/${collection.path} or its parents; do not vendor it`,
+  });
 });
 
 /**
