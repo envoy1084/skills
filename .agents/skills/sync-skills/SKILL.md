@@ -1,103 +1,100 @@
 ---
 name: sync-skills
-description: Syncs this repository with the skills and agent instructions installed globally on this machine (~/.agents/skills, ~/.claude/skills, ~/.codex/AGENTS.md). Use when the user says "sync skills", "sync my skills", "I installed new skills", "update the marketplace from what I have installed", or changed their global AGENTS.md. Only for the envoy1084/skills repository.
+description: Syncs this repository with the skills and agent instructions installed globally on this machine (~/.agents/skills, ~/.claude/skills, ~/.codex/AGENTS.md) by updating vendor/vendor.json, skills/ and global/AGENTS.md. Use when the user says "sync skills", "sync my skills", "I installed new skills", "update the vendor list from what I have installed", or changed their global AGENTS.md. Only for the envoy1084/skills repository.
 metadata:
   internal: true
 ---
 
 # Sync skills
 
-This repository installs its own skills (`skills/`) and external skills pinned in
-`.claude-plugin/marketplace.json` (which `install.sh` also reads), and keeps a backup of the global
-agent instructions in `global/AGENTS.md`. The user installs and edits these on their machine first;
-this skill brings the repository in line with what they have, so `install.sh` and the marketplace
-reproduce it and the backup stays current.
+`npx skills add envoy1084/skills` installs everything this repository holds:
+
+- `skills/`: the user's own skills.
+- `vendor/<collection>/skills/`: external skills, copied unchanged at a pinned commit by
+  `pnpm sync` from the list in `vendor/vendor.json`. Never edit `vendor/` by hand.
+- `.claude-plugin/marketplace.json`: the same, as Claude Code plugins (`pnpm sync` writes the
+  external entries).
+
+`global/AGENTS.md` is a backup of the user's global agent instructions; nothing installs it.
+
+The user installs skills on their machine first. This skill makes the repository match: it edits
+`vendor/vendor.json` (and `skills/`, `ignore.json`, `global/AGENTS.md`), then lets `pnpm sync` do the
+copying.
 
 ## 1. Report
 
-Run from the repository root:
-
 ```sh
-node .agents/skills/sync-skills/scripts/report.mjs
+pnpm install   # once
+pnpm report    # or: pnpm report --json
 ```
-
-It reads `~/.agents/.skill-lock.json` (sources and commits recorded by `npx skills`), every skill
-folder in `~/.agents/skills` and `~/.claude/skills` (Claude's app-managed `synced` folder is
-skipped), this repository's `skills/`, the marketplace and `ignore.json`, and prints:
 
 | Section | Meaning | Default action |
 | --- | --- | --- |
-| Missing from marketplace.json | Installed from an external repo, not listed | Add it, pinned to the installed commit |
-| Different commit | Listed, but installed from a newer or older commit | Move the pin to the installed commit |
+| Installed globally, not vendored | Installed from an external repo, missing from `vendor/vendor.json` | Add it at the installed commit |
+| Different commit than vendored | The user installed a newer (or older) version | Move the collection's `commit` to the installed one |
 | No recorded source | A skill folder with no lock entry (hand-made or copied) | Ask: copy into `skills/` as the user's own, or add to `ignore.json` |
-| Listed, not installed | In the marketplace, not on this machine | Ask: remove from the marketplace, or keep |
-| Own skills not installed | Informational: the user installs this repo with `install.sh` | None |
-| Global instructions | Whether `~/.codex/AGENTS.md` matches `global/AGENTS.md` and `~/.claude/CLAUDE.md` links to it | Copy the machine's version into `global/AGENTS.md` |
+| In this repository, not installed globally | Vendored or own skills the user does not have installed | Ask before removing a vendored skill; own skills are expected here |
+| Global instructions | Whether `~/.codex/AGENTS.md` matches `global/AGENTS.md` | Copy `~/.codex/AGENTS.md` over `global/AGENTS.md` |
 
-`--json` prints the same as data.
+Apply default actions without asking. Ask about the "ask" rows in one round. Show
+`diff -u global/AGENTS.md ~/.codex/AGENTS.md` before copying when the change is large. When the
+user says to ignore a skill, add it to `ignore.json` so the report stops raising it.
 
-## 2. Decide
+## 2. Edit `vendor/vendor.json`
 
-Apply the default actions without asking. Ask in one round only about the "ask" rows, and show the
-`global/AGENTS.md` diff (`diff -u global/AGENTS.md ~/.codex/AGENTS.md`) before copying it if the
-change is large. When the user says to ignore a skill, add its name to `ignore.json` so the report
-stops raising it.
+Each collection is one external repository at one commit:
 
-## 3. Apply
+```json
+{
+  "name": "<kebab-case name for the collection>",
+  "repo": "<owner>/<repo>",
+  "commit": "<40-character commit>",
+  "path": "<folder in that repo that holds the skill folders>",
+  "skills": ["<skill>", "…"],
+  "description": "From <owner>/<repo>: <what the collection is for>."
+}
+```
 
-- **External skills** live only in `.claude-plugin/marketplace.json`. Each external repo is one
-  plugin:
+- `repo`, `commit` and `path` come from the report. A skill from a repository already listed joins
+  that collection; if its installed commit differs from the collection's, the whole collection
+  moves to the newer commit (one commit per collection), and the other skills come along.
+- When the report shows `no commit`, use the repository's current `HEAD`
+  (`gh api repos/<owner>/<repo>/commits/HEAD --jq .sha`) and say so. Never use a branch name.
+- Keep `skills` sorted. Skill names must be unique across all collections and `skills/`;
+  `pnpm sync` rejects duplicates.
+- Only vendor repositories with a LICENSE; `pnpm sync` refuses others.
 
-  ```json
-  {
-    "name": "<short-name-for-the-collection>",
-    "source": { "source": "git-subdir", "url": "<owner>/<repo>", "path": "<folder holding the skills>", "sha": "<40-char commit>" },
-    "skills": ["./<skill>", "…"],
-    "description": "From <owner>/<repo>: <what the collection is for>."
-  }
-  ```
+Own skills: copy the folder into `skills/<name>/` unchanged and add a README row.
 
-  `path` and each `./<skill>` come from the report (`path=` and the skill folder). Keep `skills`
-  sorted. A skill from a repo already listed joins that plugin; a new repo gets a new plugin. Use
-  the commit the user has installed; if the report shows `no commit`, use the repo's current
-  `HEAD` (`gh api repos/<owner>/<repo>/commits/HEAD --jq .sha`) and say so. Never use a branch
-  name: pins keep installs reproducible.
-- **Own skills**: copy the folder into `skills/<name>/` unchanged and add a row to the README's
-  Skills table.
-- **Global instructions**: `cp ~/.codex/AGENTS.md global/AGENTS.md` (resolve the symlink first if
-  `~/.codex/AGENTS.md` already points into this repository: then there is nothing to copy).
-- **README**: keep the External skills table in step with the marketplace (one row per source,
-  every skill named).
+## 3. Sync
 
-`install.sh` needs no edits: it reads the marketplace.
+```sh
+pnpm sync
+```
+
+It downloads each collection at its commit, copies exactly the listed skills into
+`vendor/<collection>/skills/` with the upstream LICENSE and a SOURCE.md, deletes collections no
+longer listed, and rewrites the external plugins in `.claude-plugin/marketplace.json`.
 
 ## 4. Check for conflicts
 
-For every added skill, compare its name and description with all skills in `skills/` and the
-marketplace:
+For every added skill, read its SKILL.md and compare it with the other skills:
 
-- **Same name**: the second install overwrites the first. Never allow it; ask which to keep.
-- **Same job** (two skills that would trigger on the same request, such as two "stress-test this
-  UI" skills): tell the user which pair overlaps and recommend one, reading both SKILL.md files.
-  Prefer the one that fits the collection it belongs to (skills that route findings to each other)
-  and the user's rules (landmines, Effect style).
+- **Same name**: `pnpm sync` fails. Ask which one to keep.
+- **Same job** (two skills that would trigger on the same request): tell the user which pair
+  overlaps and recommend one. Prefer the one that fits its collection (skills that hand work to
+  each other) and the user's rules (landmines, Effect style).
 
 ## 5. Verify
 
-1. `claude plugin validate ./` passes.
-2. `sh -n install.sh` passes.
-3. Install into a throwaway home, with the real `npx` on `PATH` (a changed `HOME` breaks mise
-   shims), and count the skills:
+1. `pnpm check`: format, lint, typecheck, and `pnpm sync --check` (vendor/ matches the pinned
+   commits byte for byte).
+2. `claude plugin validate ./`.
+3. `npx skills add "$PWD" --list` lists every own and vendored skill once, and not `sync-skills`
+   (its `metadata.internal` hides it).
+4. `pnpm report` again: every section that was acted on is empty.
 
-   ```sh
-   npx_dir=$(dirname "$(mise which npx 2>/dev/null || command -v npx)")
-   home=$(mktemp -d)
-   env HOME="$home" PATH="$npx_dir:/usr/bin:/bin" DISABLE_TELEMETRY=1 sh ./install.sh --yes -a claude-code
-   ls "$home/.claude/skills" | wc -l   # own skills + every skill listed in the marketplace
-   ```
-
-   `sync-skills` must not be among them (`metadata.internal` hides it from `npx skills`).
-4. Run the report again: every section that was acted on is empty.
+Update the README's External skills table to match `vendor/vendor.json`.
 
 ## 6. Commit
 

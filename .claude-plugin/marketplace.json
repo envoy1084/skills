@@ -12,79 +12,22 @@
     },
     {
       "name": "tstack-pr",
-      "source": {
-        "source": "git-subdir",
-        "url": "t3dotgg/tstack",
-        "path": "skills",
-        "sha": "11e37a74d0a6868c121cd0910ab2b3bd9873b92a"
-      },
-      "skills": [
-        "./file-pr",
-        "./babysit-pr",
-        "./leaving-pr-comments"
-      ],
+      "source": "./vendor/tstack-pr",
       "description": "From t3dotgg/tstack: file short PRs, babysit them through CI and review, and format agent comments."
     },
     {
       "name": "emil-design-engineering",
-      "source": {
-        "source": "git-subdir",
-        "url": "emilkowalski/skills",
-        "path": "skills",
-        "sha": "64eb3deb9a5fbfa041faf783e0bc3fd635872e9c"
-      },
-      "skills": [
-        "./animation-performance",
-        "./animation-vocabulary",
-        "./apple-design",
-        "./ask-sonner",
-        "./choreograph",
-        "./find-animation-opportunities",
-        "./gestures",
-        "./improve-animations",
-        "./learn-taste",
-        "./pick-ui-library",
-        "./remove-animations",
-        "./review-animations"
-      ],
+      "source": "./vendor/emil-design-engineering",
       "description": "From emilkowalski/skills: animation, motion and design-engineering polish."
     },
     {
       "name": "interfaces",
-      "source": {
-        "source": "git-subdir",
-        "url": "jakubkrehel/skills",
-        "path": "skills",
-        "sha": "672ae44ace6aaed65b86cbb1e2fd6fbea0e79578"
-      },
-      "skills": [
-        "./better-accessibility",
-        "./better-colors",
-        "./better-interface",
-        "./better-layout",
-        "./better-motion",
-        "./better-typography",
-        "./better-ui",
-        "./better-writing",
-        "./break",
-        "./build-design",
-        "./explain-interface",
-        "./interface-review",
-        "./variant"
-      ],
+      "source": "./vendor/interfaces",
       "description": "From jakubkrehel/skills: accessibility, color, layout, typography, UI, motion and writing for interfaces."
     },
     {
       "name": "find-skills",
-      "source": {
-        "source": "git-subdir",
-        "url": "vercel-labs/skills",
-        "path": "skills",
-        "sha": "57217cf86ba38148a57af9e90d14a4c049558330"
-      },
-      "skills": [
-        "./find-skills"
-      ],
+      "source": "./vendor/find-skills",
       "description": "From vercel-labs/skills: discover and install more skills."
     }
   ]

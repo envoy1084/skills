@@ -19,8 +19,9 @@ they work in Claude Code, Codex, and other agents that support skills.
 
 ## External skills
 
-The installers below also add skills from other repositories, pinned to a tested commit. They are
-not copied into this repository.
+Skills from other repositories, copied unchanged into [`vendor/`](vendor) at a pinned commit, each
+with its upstream license and a `SOURCE.md` saying where it came from. They install together with
+the skills above.
 
 | Source | Skills | For |
 |---|---|---|
@@ -29,45 +30,20 @@ not copied into this repository.
 | [jakubkrehel/skills](https://github.com/jakubkrehel/skills) | `better-accessibility`, `better-colors`, `better-interface`, `better-layout`, `better-motion`, `better-typography`, `better-ui`, `better-writing`, `break`, `build-design`, `explain-interface`, `interface-review`, `variant` | Interface quality |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | `find-skills` | Finding more skills |
 
-The list lives in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json);
-`install.sh` reads it. To pull in skills you installed globally, ask an agent in this repository to
-"sync skills" (the repository-only `sync-skills` skill in `.agents/skills`).
-
 Where two collections cover the same job, one is kept: `break` over `break-ui`, `variant` over
 `prototype`, `better-motion` over `animate`, and `better-interface`, `interface-review` and
 `better-ui` over `emil-design-eng` and `ask-emil`. jakubkrehel's skills hand work to each other, so
 that collection stays whole.
 
-## Global agent instructions
-
-[`global/AGENTS.md`](global/AGENTS.md) is a backup of my global agent instructions
-(`~/.codex/AGENTS.md`, with `~/.claude/CLAUDE.md` linked to it). The installer does not touch them.
-
 ## Install
 
-### Every agent (Claude Code, Codex, Cursor, …)
-
 ```bash
-curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh
+npx skills add envoy1084/skills
 ```
 
-It asks three things, then runs `npx skills add` for each chosen collection:
-
-1. **Which collections**: this repository's skills and each external source (Enter for all).
-2. **Where**: globally in your home folder, or into the current project.
-3. **Which agents**: defaults to the agents found on the machine (Claude Code, Codex, Cursor,
-   OpenCode, Gemini CLI, …); type any [agent id](https://github.com/vercel-labs/skills/blob/main/docs/agents.md).
-
-Flags answer the questions up front, and without a terminal the defaults apply (all collections,
-global, detected agents; it stops if it finds no agent rather than installing for all of them):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh -s -- --yes
-curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh -s -- -a claude-code -a codex --only envoy-skills,interfaces
-curl -fsSL https://raw.githubusercontent.com/envoy1084/skills/main/install.sh | sh -s -- --project
-```
-
-To install only this repository's skills: `npx skills add envoy1084/skills`.
+The `skills` CLI asks which skills, where (globally or this project) and for which agents. To take
+everything without questions: `npx skills add envoy1084/skills --skill '*' -g -y -a claude-code -a codex`
+(name your agents; without `-a`, a machine with no agent folders gets all 79 agents).
 
 ### Claude Code plugins
 
@@ -80,31 +56,43 @@ To install only this repository's skills: `npx skills add envoy1084/skills`.
 /plugin install find-skills@envoy-skills
 ```
 
-Each source is its own plugin, so you can install only the ones you want. Third-party marketplaces
-do not auto-update; run `claude plugin marketplace update envoy-skills` after this repository
-changes.
+Each collection is its own plugin. Third-party marketplaces do not auto-update; run
+`claude plugin marketplace update envoy-skills` after this repository changes.
 
 ### Requirements
 
 - An authenticated [GitHub CLI](https://cli.github.com) (`gh`) for the PR skills.
 - `python3` for `babysit-pr`'s `pr-wait` script.
 
-### Developing the skills
+## Global agent instructions
 
-To edit the skills and use them at the same time, clone the repo and symlink each skill into your
-agent's skills folder, so edits take effect immediately:
+[`global/AGENTS.md`](global/AGENTS.md) is a backup of my global agent instructions
+(`~/.codex/AGENTS.md`, with `~/.claude/CLAUDE.md` linked to it). Nothing installs it.
+
+## Developing
+
+The repository is a pnpm workspace with one Effect v4 tool, [`tools/cli`](tools/cli) (`skills-dev`):
 
 ```bash
-git clone https://github.com/envoy1084/skills ~/Projects/Personal/skills
-cd ~/Projects/Personal/skills
-
-for skill in skills/*/; do
-  ln -sfn "$PWD/$skill" ~/.claude/skills/"$(basename "$skill")"   # Claude Code
-  ln -sfn "$PWD/$skill" ~/.codex/skills/"$(basename "$skill")"    # Codex
-done
+pnpm install
+pnpm sync           # copy the skills listed in vendor/vendor.json into vendor/, update the marketplace
+pnpm sync --check   # fail if vendor/ differs from the pinned commits
+pnpm report         # compare skills installed on this machine with this repository
+pnpm check          # format, lint, typecheck and sync --check
 ```
 
-Running `sh install.sh` from a clone installs that clone instead of GitHub.
+To bring in skills you installed globally, ask an agent in this repository to "sync skills": the
+repository-only `sync-skills` skill (`.agents/skills`) reads `pnpm report`, edits
+`vendor/vendor.json` and runs `pnpm sync`. Never edit `vendor/` by hand.
+
+To use your own skills while editing them, symlink them into your agent's skills folder:
+
+```bash
+for skill in skills/*/; do
+  ln -sfn "$PWD/$skill" ~/.claude/skills/"$(basename "$skill")"   # Claude Code
+  ln -sfn "$PWD/$skill" ~/.agents/skills/"$(basename "$skill")"   # Codex and others
+done
+```
 
 ## Make them yours
 

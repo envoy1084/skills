@@ -1,0 +1,70 @@
+{
+  "$comment": "External skills copied into vendor/<name>/skills by the sync-skills skill (scripts/vendor.mjs). Edit this file, then run the script; never edit vendor/ by hand.",
+  "collections": [
+    {
+      "name": "tstack-pr",
+      "repo": "t3dotgg/tstack",
+      "commit": "11e37a74d0a6868c121cd0910ab2b3bd9873b92a",
+      "path": "skills",
+      "skills": [
+        "babysit-pr",
+        "file-pr",
+        "leaving-pr-comments"
+      ],
+      "description": "From t3dotgg/tstack: file short PRs, babysit them through CI and review, and format agent comments."
+    },
+    {
+      "name": "emil-design-engineering",
+      "repo": "emilkowalski/skills",
+      "commit": "64eb3deb9a5fbfa041faf783e0bc3fd635872e9c",
+      "path": "skills",
+      "skills": [
+        "animation-performance",
+        "animation-vocabulary",
+        "apple-design",
+        "ask-sonner",
+        "choreograph",
+        "find-animation-opportunities",
+        "gestures",
+        "improve-animations",
+        "learn-taste",
+        "pick-ui-library",
+        "remove-animations",
+        "review-animations"
+      ],
+      "description": "From emilkowalski/skills: animation, motion and design-engineering polish."
+    },
+    {
+      "name": "interfaces",
+      "repo": "jakubkrehel/skills",
+      "commit": "672ae44ace6aaed65b86cbb1e2fd6fbea0e79578",
+      "path": "skills",
+      "skills": [
+        "better-accessibility",
+        "better-colors",
+        "better-interface",
+        "better-layout",
+        "better-motion",
+        "better-typography",
+        "better-ui",
+        "better-writing",
+        "break",
+        "build-design",
+        "explain-interface",
+        "interface-review",
+        "variant"
+      ],
+      "description": "From jakubkrehel/skills: accessibility, color, layout, typography, UI, motion and writing for interfaces."
+    },
+    {
+      "name": "find-skills",
+      "repo": "vercel-labs/skills",
+      "commit": "57217cf86ba38148a57af9e90d14a4c049558330",
+      "path": "skills",
+      "skills": [
+        "find-skills"
+      ],
+      "description": "From vercel-labs/skills: discover and install more skills."
+    }
+  ]
+}
