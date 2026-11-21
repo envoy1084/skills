@@ -57,8 +57,8 @@ build first.
 
 ## Code guidelines
 
-These apply to all code: packages, apps, tools and tests. Load the `effect-style` skill before
-writing code and `effect-development` before composing Effect APIs.
+These apply to all code: packages, apps, tools and tests. Load the `effect-conventions`
+skill before writing or reviewing code.
 
 - Name things for what they are in the domain, consistently across the repository: one name per
   concept, not synonyms per file.
@@ -69,7 +69,7 @@ writing code and `effect-development` before composing Effect APIs.
   a specific name; never into catch-all `utils` or `helpers` files.
 - Separate logical blocks with a blank line (setup, validation, execution, result). Oxfmt does not
   insert logical blank lines; review grouping yourself.
-- Every exported declaration of a published package has TSDoc (`jsdocs` skill). Preserve existing
+- Every exported declaration of a published package has TSDoc (`effect-conventions` skill). Preserve existing
   public APIs when cleaning up.
 - Follow [landmines](https://github.com/interfere-inc/landmines) (below); lint enforces it.
 
@@ -97,7 +97,7 @@ honest. Each rule's message says what to do instead; do that rather than disabli
 
 Tests live in each package's `test/` folder and run through `@effect/vitest` (`it.effect`,
 `assert`). Write the tests a behaviour needs: the documented contract, its failure cases and
-regressions. Do not test what the type checker already proves. See the `test-development` skill.
+regressions. Do not test what the type checker already proves. See the `effect-conventions` skill.
 
 ## Commits and pull requests
 
@@ -114,10 +114,7 @@ repository.
 
 | Skill                 | Load it when                                                     |
 | --------------------- | ---------------------------------------------------------------- |
-| `effect-development`  | Writing or reviewing code that composes Effect APIs              |
-| `effect-style`        | Writing any code: file layout, naming, imports, errors, services |
-| `jsdocs`              | Adding or changing a public declaration or its documentation     |
-| `test-development`    | Adding or changing tests                                         |
+| `effect-conventions`  | Writing, reviewing, documenting or testing any Effect code       |
 | `package-development` | Adding, renaming or publishing a workspace package               |
 | `dependencies`        | Adding, upgrading or removing a dependency                       |
 | `changesets`          | A change affects a published package                             |

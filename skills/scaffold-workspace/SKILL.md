@@ -112,7 +112,7 @@ Use the versions pinned in the templates as they are. Do not upgrade anything (n
 ## Step 4: Write the first code
 
 Every library needs a real first module, or publint, attw and the release check have nothing to
-check. Load the `effect-style`, `jsdocs` and `test-development` skills, then for each package:
+check. Load the `effect-conventions` skill, then for each package:
 
 1. Write `src/<Module>.ts` with the package's first public API (from what the user described; ask if
    you have nothing to go on rather than inventing a domain) and `src/index.ts` re-exporting it as

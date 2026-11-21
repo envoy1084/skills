@@ -32,7 +32,7 @@ Write for users reading the changelog: what changed and what to do, in one or tw
 the API, use backticks for code, and for breaking changes show the migration. One changeset per
 logical change; a PR may contain several.
 
-New APIs get `@since` set to the version this bump produces (see the `jsdocs` skill).
+New APIs get `@since` set to the version this bump produces (see the `effect-conventions` skill).
 
 ## Releases
 

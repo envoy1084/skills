@@ -9,8 +9,8 @@ Agent skills installed with `npx skills add envoy1084/skills`:
   written by `pnpm sync`).
 - `global/AGENTS.md`: a backup of the user's global agent instructions.
 - `tools/cli`: `skills-dev` (`pnpm sync`, `pnpm report`), written with Effect v4. Before changing
-  it, read `node_modules/effect/AGENTS.md` and follow the `effect-development` and `effect-style`
-  skills.
+  it, read `node_modules/effect/AGENTS.md` and follow the `effect-conventions`
+  skill.
 
 Rules:
 

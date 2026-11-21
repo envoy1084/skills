@@ -36,7 +36,7 @@ init, install and linters:
 6. Turborepo: the root `turbo.json` already caches `.next/**` and `.output/**`. Add the app's build
    environment variables to the `build` task's `env`, never to `globalEnv`.
 7. Tests: if the app has tests, add a Vitest project for it (`klarity/vitest/react` settings for
-   component tests), following the `test-development` skill.
+   component tests), following the `effect-conventions` skill.
 8. Remove the generator's sample comments and boilerplate content; landmines rejects prose
    comments.
 9. Update `AGENTS.md` and `CONTRIBUTING.md` workspace maps.
