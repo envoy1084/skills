@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest"
-import { binNames, entriesModule, publicEntries } from "../release/release/consumer.ts"
+import { binNames, entriesModule, publicEntries } from "../release/consumer.ts"
 
 describe("publicEntries", () => {
   it("keeps exact JavaScript subpaths and drops package.json and other files", () => {

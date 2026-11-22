@@ -9,7 +9,7 @@ that match the task.
 __WORKSPACE_MAP__
 - `packages/*`: publishable packages, each with its own public boundary.
 - `apps/*`: runnable applications (private).
-- `scripts/`: repository scripts (a private workspace package).
+- `scripts/`: the repository's tooling, one Effect CLI (`node scripts/bin.ts <command>`).
 - `scratchpad/`: ad hoc probes: `scratchpad/<name>.ts`, run with `node`, deleted afterwards (git
   ignores everything there but its skeleton).
 <!-- @@publish -->
@@ -74,6 +74,19 @@ one only when the flagged pattern is the point, for the next line only
 Packages export their source during development (`"./*": "./src/*.ts"`) and their build when
 published (`publishConfig.exports` → `dist`), so tests and type checks never need a build. Builds
 are `tsc -b` plus Babel's pure-call annotations, so bundlers tree-shake them like Effect.
+
+## Repository scripts
+
+Every repository script is a command of the Effect CLI in `scripts/`: `scripts/commands/<name>.ts`,
+registered in `scripts/cli.ts` and run as `node scripts/bin.ts <name>` (root `package.json` scripts
+call it). No JavaScript under `scripts/`: `pnpm lint` fails on `.js`/`.mjs`/`.cjs` files there.
+
+- Keep commands thin: flags and wiring in the command, logic in exported functions that
+  `scripts/test/<name>.test.ts` tests with real temporary folders (`FileSystem.makeTempDirectoryScoped`).
+- Fail with the CLI's errors (`CheckFailed` for problems found, `ToolFailed` for a tool that failed);
+  `scripts/bin.ts` reports them and sets the exit code. Run other tools through the `Tools` service.
+- Config files (`vitest.config.ts`, `commitlint.config.ts`) are plain TypeScript: their tools load
+  them.
 
 ## Dependencies
 

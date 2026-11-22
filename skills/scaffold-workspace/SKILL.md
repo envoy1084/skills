@@ -24,6 +24,9 @@ Every workspace:
   (`@effect-kit/oxc`) and landmines' testing rules. lefthook formats and lints staged files,
   commitlint checks messages, and lint + typecheck + tests run before a push.
 - **Tests**: one root `vitest.config.ts` with a project per package, `@effect/vitest` only.
+- **Repository scripts**: one Effect CLI in `scripts/` (`node scripts/bin.ts <command>`: `circular`,
+  `clean`, `lint`, plus `dist-types`, `pack-check` and `release check|smoke` when publishing), with
+  tests. Scripts are TypeScript only; `pnpm lint` fails on JavaScript there.
 - **Dependencies**: exact pins, a catalog for shared versions, `minimumReleaseAge` of one day,
   dependency install scripts denied unless allowed.
 - **Files**: a multi-language `.gitignore`, `.node-version`, `.vscode/`, `AGENTS.md`,
@@ -41,7 +44,7 @@ With `publish: true` (npm packages), also:
   TSDoc examples as tests (`@effect/doctest`), type tests (tstyche), declaration and package checks.
 - Releases: `.changeset/`, `release.yml` (dispatch only: opens the version PR, then checks, packs,
   verifies and publishes the exact tarballs with npm trusted publishing and provenance),
-  `release-smoke.yml`, `changeset-status.yml`, and the release CLI in `scripts/release/`.
+  `release-smoke.yml`, `changeset-status.yml`, and the `release` commands of the scripts CLI.
 
 See [references/layout.md](references/layout.md) for every file and why it exists.
 

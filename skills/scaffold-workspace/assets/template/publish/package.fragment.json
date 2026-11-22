@@ -2,13 +2,13 @@
   "scripts": {
     "changeset": "changeset",
     "check": "pnpm format:check && pnpm lint && pnpm docs:check && pnpm typecheck && pnpm circular && pnpm test && pnpm test:types && pnpm test:docs && pnpm build && pnpm check:dist && pnpm pack:check",
-    "check:dist": "node scripts/check-dist-types.mjs",
+    "check:dist": "node scripts/bin.ts dist-types",
     "codegen": "effect-kit-codegen codegen --pattern \"packages/*/src/index.ts\"",
     "docs:check": "effect-kit-jsdocs --check",
-    "pack:check": "node scripts/pack-check.mjs",
-    "release:check": "node scripts/release/bin.ts check",
+    "pack:check": "node scripts/bin.ts pack-check",
+    "release:check": "node scripts/bin.ts release check",
     "release:pack": "changeset pack --out-dir tmp/release",
-    "release:smoke": "node scripts/release/bin.ts smoke",
+    "release:smoke": "node scripts/bin.ts release smoke",
     "release:version": "changeset version && pnpm install --ignore-scripts --no-frozen-lockfile && dprint fmt",
     "test:docs": "vitest run --config vitest.docs.ts",
     "test:types": "tstyche"

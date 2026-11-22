@@ -14,7 +14,9 @@ package of the same kind.
 
 1. Decide what it is: a published library (`packages/<name>`, or `packages/<family>/<name>`
    published as `<scope>/<family>-<name>`), an app (`apps/`, see the scaffold skill's
-   `references/apps.md`), or repository tooling (`scripts/`).
+   `references/apps.md`), or repository tooling, which is never a package: add a command to the
+   Effect CLI in `scripts/` (`scripts/commands/<name>.ts`, registered in `scripts/cli.ts`, tested in
+   `scripts/test/`), never a JavaScript file.
 2. Create only the files it needs: `package.json`, `tsconfig.json`, `README.md`, `LICENSE` (copy of
    the root one), `src/index.ts` with an `@barrel` annotation, `test/`, and `typetest/` when its
    types are part of the contract.

@@ -22,7 +22,9 @@ cli.pipe(
   Effect.catchTags({
     CheckFailed: ({ check, problems }) => report([...problems, `${check}: failed`]),
     ToolFailed: ({ tool, output }) => report([Str.trim(output), `${tool}: failed`]),
+    // @@publish
     SetupError: ({ message }) => report([message])
+    // @@end
   }),
   Effect.provide(services),
   NodeRuntime.runMain

@@ -14,7 +14,7 @@ export class Tools extends Context.Service<
       options?: { readonly cwd?: string; readonly inherit?: boolean }
     ) => Effect.Effect<string, ToolFailed>
   }
->()("scripts/release/Tools") {
+>()("scripts/Tools") {
   static readonly layer = Layer.effect(
     Tools,
     Effect.gen(function*() {

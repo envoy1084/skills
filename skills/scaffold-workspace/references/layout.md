@@ -35,11 +35,11 @@ One naming scheme: a verb, then `:qualifier` for a variant.
 | `build` | `tsc -b tsconfig.packages.json`, then each package's build |
 | `clean` | Remove build output and caches |
 | `format`, `format:check` | dprint |
-| `lint`, `lint:fix` | oxlint |
+| `lint`, `lint:fix` | oxlint, then the CLI's repository rules |
 | `typecheck` | tsrs (`effect-tsgo tsrs -b`): fast, with Effect diagnostics |
 | `typecheck:tsc` | The official `tsc -b`, for CI |
 | `test`, `test:watch` | Vitest once (never watch mode by accident), or watching |
-| `circular` | Import cycles between package modules (madge) |
+| `circular` | Import cycles between package modules |
 | `test:types` | **publish** — tstyche |
 | `test:docs` | **publish** — TSDoc examples |
 | `docs:check` | **publish** — TSDoc rules |
@@ -53,13 +53,20 @@ One naming scheme: a verb, then `:qualifier` for a variant.
 
 ## `scripts/` and `scratchpad/`
 
+Every repository script is a command of one Effect CLI, run as `node scripts/bin.ts <command>` (Node
+runs the TypeScript directly). Effect keeps its glue as plain `.mjs` files; one typed, tested CLI
+ages better in repositories that agents extend, so the scaffold goes further. `pnpm lint` fails on
+JavaScript files under `scripts/`.
+
 | Path | Purpose |
 | --- | --- |
-| `scripts/package.json`, `tsconfig.json` | A private workspace package, so scripts have real dependencies and are type-checked (through `tsconfig.tests.json`). |
-| `scripts/circular.mjs`, `clean.mjs` | The `circular` and `clean` scripts. |
-| `scripts/check-dist-types.mjs`, `pack-check.mjs` | **publish** — `check:dist` and `pack:check`. |
-| `scripts/release/` | **publish** — `release check --pack-dir` (plan vs publishable packages, tarball integrity, publint, attw, a clean consumer install that imports every entry point, pattern exports expanded, and runs every bin with `--help`; writes `verification.json`; never changes the pack dir) and `release smoke --pack-dir [--provenance]` (npm integrity and tarballs against the packed ones, and SLSA provenance from this repository's `release.yml`). |
-| `scripts/test/` | **publish** — tests for the release CLI. |
+| `scripts/package.json`, `tsconfig.json` | A private workspace package with the CLI's dependencies (`@effect/platform-node`, `effect`, `glob`, `madge`); type-checked through `tsconfig.tests.json`. |
+| `scripts/bin.ts`, `cli.ts`, `errors.ts` | Entry point (Node services, error reporting, exit code), the command list, and the CLI's errors: `CheckFailed`, `ToolFailed`, `SetupError`. |
+| `scripts/services/Tools.ts` | Runs other tools (`pnpm`, `tsc`, publint, attw), failing with their output. |
+| `scripts/commands/circular.ts`, `clean.ts`, `lint.ts` | `circular` (import cycles, madge), `clean` (build output and caches), `lint` (rules oxlint cannot express: no JavaScript in `scripts/`). |
+| `scripts/commands/distTypes.ts`, `packCheck.ts` | **publish** — `dist-types` (built declarations with `skipLibCheck: false`) and `pack-check` (`pnpm pack`, publint, attw). |
+| `scripts/commands/release*.ts`, `scripts/release/` | **publish** — `release check --pack-dir` (plan vs publishable packages, tarball integrity, publint, attw, a clean consumer install that imports every entry point, pattern exports expanded, and runs every bin with `--help`; writes `verification.json`; never changes the pack dir) and `release smoke --pack-dir [--provenance]` (npm integrity and tarballs against the packed ones, and SLSA provenance from this repository's `release.yml`). |
+| `scripts/test/` | Tests for the commands' logic. |
 | `scratchpad/` | Ad hoc probes: only `index.ts`, `package.json` and `tsconfig.json` are committed. |
 
 ## `.github/`
