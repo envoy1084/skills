@@ -9,10 +9,10 @@ they work in Claude Code, Codex, and other agents that support skills.
 | Skill | Say | What it does |
 |---|---|---|
 | `effect-conventions` | (automatic) | Writes, documents and tests Effect v4 code the way the Effect source does: modules, data types, `dual` APIs, services, errors, TSDoc with doctests, tests, manifests and tooling, checked against a clone of Effect-TS/effect. |
-| `package-development` | "add a package" | Adds or publishes a workspace package with full npm metadata and a tsdown build. |
+| `package-development` | "add a package" | Adds or publishes a workspace package with full npm metadata, source-first exports and a `tsc -b` build. |
 | `dependencies` | (automatic) | Pins exact latest versions, keeps the pnpm catalog for shared deps, ranges for libraries. |
 | `changesets` | (automatic) | Writes changesets and picks the version bump for published packages. |
-| `scaffold-workspace` | "scaffold a new project" | Creates a pnpm + Turborepo + TS 7 + Effect v4 monorepo with klarity, landmines, hardened GitHub workflows and, for npm packages, verified provenance releases. |
+| `scaffold-workspace` | "scaffold a new project" | Creates a pnpm + TS 7 + Effect v4 workspace laid out like the Effect repository (dprint, oxlint with Effect's rules, `tsc -b`, jsdocs, codegen, doctest, tstyche), with hardened GitHub workflows and, for npm packages, verified provenance releases. |
 
 ## External skills
 

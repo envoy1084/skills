@@ -41,9 +41,10 @@ JS plugin. Categories `correctness`, `suspicious`, `perf` are errors. Notable ru
 | `eslint/no-console`, `no-var`, `no-useless-constructor`, `import/no-duplicates` | as named |
 
 `@effect/oxc` (`packages/tools/oxc/src/oxlint/rules/`: the five `effect/*` rules) is private to the
-Effect repo. To lint exactly like Effect, vendor the package (MIT, keep the license and record the
-source commit) and extend `no-import-from-barrel-package`'s check patterns to your scope; standard
-rules cannot express `no-unused-internal`.
+Effect repo; `@effect-kit/oxc` publishes it unchanged. Extend its preset
+(`./node_modules/@effect-kit/oxc/oxlintrc.json`), load `@effect-kit/oxc/oxlint` as a JS plugin, and
+redefine `no-import-from-barrel-package`'s `checkPatterns` to cover your scope; standard rules
+cannot express `no-unused-internal`.
 
 ## Compiler and language service
 
@@ -171,8 +172,9 @@ the marker are fine to edit.
 2. Nothing in the repository renders that model. After promotion, `npm-promote`
    (`src/WebsiteDeploy.ts`) dispatches a `publish-api-reference` event to `Effect-TS/website`,
    which builds the reference for that revision.
-3. Outside Effect: vendor `@effect/jsdocs` and write a renderer that reads only the model, so the
-   docs stay identical in content to Effect's.
+3. Outside Effect: use `@effect-kit/jsdocs` (`effect-kit-jsdocs --check`, reading
+   `jsdocs.config.json`) and write a renderer that reads only the model, so the docs stay identical
+   in content to Effect's.
 
 ## Third-party availability
 
@@ -180,6 +182,7 @@ the marker are fine to edit.
 | --- | --- |
 | `@effect/vitest`, `@effect/doctest`, `@effect/tsgo` | published, use directly |
 | `@effect/docgen` | published but legacy (v3 pipeline, `@example` tags, TypeScript `<7`): do not use for v4-style docs |
-| `@effect/jsdocs`, `@effect/utils` (barrel codegen), `@effect/oxc`, `@effect/ai-docgen`, `@effect/bundle`, `@effect/npm-promote`, `@effect/api-diff` | private (`packages/tools/*`): vendor (MIT, keep the license and source commit) or follow the rules by hand |
+| `@effect/oxc`, `@effect/jsdocs`, `@effect/utils` (barrel codegen), `@effect/bundle`, `@effect/ai-docgen` | private (`packages/tools/*`); published as unofficial forks `@effect-kit/oxc`, `@effect-kit/jsdocs`, `@effect-kit/codegen` (`effect-kit-codegen codegen`), `@effect-kit/bundle`, `@effect-kit/ai-docgen`: use those |
+| `@effect/npm-promote`, `@effect/api-diff` | private and specific to Effect's release and v3→v4 migration: not needed elsewhere |
 | `typeperf/`, `runtimeperf/` harnesses | live inside `packages/effect`; copy them into the package they measure |
 | API reference site | built in the separate `Effect-TS/website` repo; bring your own renderer (e.g. from the jsdocs JSON model) |

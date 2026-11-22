@@ -3,7 +3,7 @@ name: changesets
 description: Release notes with Changesets. Use when a change affects a published package, when choosing a version bump, or when preparing or reviewing a release.
 ---
 
-These conventions are for pnpm + Turborepo + Effect v4 workspaces. When the repository's own
+These conventions are for pnpm + Effect v4 workspaces. When the repository's own
 `AGENTS.md` or neighbouring code says otherwise, follow the repository.
 
 ## When a changeset is needed

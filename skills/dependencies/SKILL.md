@@ -3,13 +3,13 @@ name: dependencies
 description: Dependency policy for this pnpm workspace. Use when adding, upgrading, removing or pinning a dependency, editing the pnpm catalog, or reviewing a Dependabot PR.
 ---
 
-These conventions are for pnpm + Turborepo + Effect v4 workspaces. When the repository's own
+These conventions are for pnpm + Effect v4 workspaces. When the repository's own
 `AGENTS.md` or neighbouring code says otherwise, follow the repository.
 
 ## Rules
 
 1. **Exact pins.** Every version in a package.json or the catalog is exact (`4.1.5`, not
-   `^4.1.5`). `.npmrc` sets `save-exact=true`.
+   `^4.1.5`). `pnpm-workspace.yaml` sets `savePrefix: ""`.
 2. **Latest release, upgrades on request.** A newly added dependency uses its latest version.
    Existing pins are upgraded only when the user asks; then go to the latest. When something blocks
    the latest (a peer range, a regression), pin the newest working version and leave a one-line
@@ -18,15 +18,17 @@ These conventions are for pnpm + Turborepo + Effect v4 workspaces. When the repo
    `peerDependencies` use ranges that cover the versions it supports (`^4.1.5`, `>=2.14.0 <4`), so
    consumers are not forced onto one exact version. Its `devDependencies` stay exact.
 4. **Catalog for shared versions only.** `pnpm-workspace.yaml`'s `catalog` holds the shared
-   toolchain (TypeScript, `@types/node`, Oxlint, Vitest, Effect, klarity) and any dependency
-   referenced by more than one package.json. Reference it with `"catalog:"`. A dependency used by
+   versions (`effect`, `@types/node`) and any dependency referenced by more than one
+   package.json. Reference it with `"catalog:"`. A dependency used by
    one package is pinned in that package.json instead.
 5. **One-day release age.** `minimumReleaseAge: 1440` blocks versions published less than a day
-   ago. Effect (`effect`, `@effect/*`), Oxlint (`oxlint`, `oxlint-tsgolint` and their binaries) and
-   Oxfmt are excluded and always run their latest release. Do not add other exclusions without a
-   reason in a comment.
-6. **Builds are opt-in.** A dependency that needs an install script goes in `allowBuilds` with a
-   comment saying what the script does.
+   ago. Effect (`effect`, `@effect/*`) and `@effect-kit/*` (Effect's repository tools, republished
+   with provenance) are excluded and always run their latest release. Do not add other exclusions
+   without a reason in a comment.
+6. **Builds are opt-in.** Dependency install scripts are denied: pnpm fails the install until each
+   one is listed in `allowBuilds`. Use `false` when the package works without its script (most
+   binaries ship as optional dependencies) and `true`, with a comment saying what the script does,
+   only when it is needed.
 
 ## Workflow
 
