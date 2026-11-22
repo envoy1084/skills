@@ -9,7 +9,17 @@
 - Related modules share a prefix rather than a folder when they are peers:
   `HttpApi`, `HttpApiEndpoint`, `HttpApiGroup`, `HttpApiBuilder`, `HttpApiError`. Domain families
   with their own entry point live in a lower-case folder with an `index.ts`: `src/http-api/`,
-  `src/crypto/`, `src/sql/`.
+  `src/crypto/`, `src/sql/`. Those folders exist only inside the `effect` package, which bundles
+  dozens of families; modules inside a folder still carry the family prefix (`Sql*`, `Rpc*`).
+- **Satellite packages are flat**: every module sits directly in `src/` with a domain prefix
+  (`packages/sql/pg/src/PgClient.ts`, `PgPool.ts`, `PgMigrator.ts`;
+  `packages/opentelemetry/src/OtelTracer.ts`, `OtelLogger.ts`; `packages/atom/react/src/Hooks.ts`).
+  The only directory entry upstream uses for a sub-area is `testing/`.
+- **Test helpers**: a family's test module is `<Family>Test` (`http-api/HttpApiTest.ts`,
+  `rpc/RpcTest.ts`, `ai/McpTest.ts`); modules under `testing/` are prefixed `Test`
+  (`testing/TestClock.ts`, `TestConsole.ts`, `TestSchema.ts`).
+- Satellites may reuse a core module name when the meaning is domain-specific
+  (`@effect/opentelemetry/Resource` next to `effect/Resource`); consumers alias on import.
 - Split by concept, never by kind: no `types.ts`, `utils.ts`, `helpers.ts`, `constants.ts`,
   `errors.ts` catch-alls. An error that belongs to one module is declared in that module; a family
   of errors shared by many modules gets its own module (`PlatformError.ts`, `CryptoError.ts`).

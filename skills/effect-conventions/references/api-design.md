@@ -74,7 +74,9 @@ export const make = (options: {
 ```
 
 - One options object, written **inline** in the signature, fields `readonly`, optional fields
-  `?: T | undefined` (required by `exactOptionalPropertyTypes`).
+  `?: T | undefined` (required by `exactOptionalPropertyTypes`). This is the maintainers' rule in
+  `.agents/skills/effect-development/SKILL.md` ("Write option types inline in the signature by
+  default").
 - Extract a named options type only when the same substantial set is shared by several APIs, or
   when it needs conditional/mapped types driven by type parameters. A long list for one API is not
   a reason.
@@ -103,7 +105,8 @@ export const make = (options: {
 | layers | `layer`, `layerX` (`layerTest`, `layerWebCrypto`, `layerFromEnv`) | 217 module-level `layer*` exports |
 | services | noun for what it provides | `HttpClient`, `Database` |
 | errors | domain name; family errors end in `Error` | `NotFound`, `BadArgument`, `PlatformError` |
-| tracing names | `"Module.function"` | `Effect.fn("Database.query")` |
+| tracing names | `"Module.function"` | `Effect.fn("Database.query")`, `"Migrator.run"` |
+| metrics | snake_case, package prefix, constants in a `*Metrics` module | `ClusterMetrics.entities` = `"effect_cluster_entities"` |
 
 One name per concept across the package; do not introduce synonyms per module.
 

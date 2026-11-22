@@ -42,10 +42,12 @@ against `main` at effect 4.1.5 (commit `66ab992`, 2026-11-20); re-check anything
    | tagged union / result type | `Option.ts`, `Result.ts`, `Exit.ts` |
    | predicates and combinators | `Predicate.ts`, `Filter.ts`, `Order.ts`, `Equivalence.ts` |
    | service + layers | `Context.ts`, `ai-docs/src/01_effect/03_services/*` |
-   | error family with reasons | `PlatformError.ts`, `crypto/CryptoError.ts` |
+   | error family with reasons | `sql/SqlError.ts` (Schema, serializable), `PlatformError.ts` (Data) |
    | declaration-as-data + Layer implementation | `http-api/HttpApiEndpoint.ts`, `http-api/HttpApiBuilder.ts` |
    | application code (handlers, services, wiring) | `ai-docs/src/**` |
-   | satellite package | `packages/opentelemetry` |
+   | satellite package | `packages/opentelemetry`, `packages/sql/pg` (flat `src/`, domain-prefixed modules) |
+   | metrics constants | `cluster/ClusterMetrics.ts` |
+   | benchmarks, type cost | `benchmark/*.ts` (tinybench), `typeperf/`, `runtimeperf/` |
 
 4. **Load the reference files that apply** before editing:
 
@@ -71,9 +73,11 @@ against `main` at effect 4.1.5 (commit `66ab992`, 2026-11-20); re-check anything
 
 1. One public concept per PascalCase module file (`Grants.ts`); its main type has the module's
    name (`Grants.Grants`). Implementation details go in `src/internal/camelCase.ts`, every export
-   there tagged `/** @internal */`.
+   there tagged `/** @internal */`. Satellite packages keep `src/` flat with domain-prefixed
+   names (`PgClient`); `testing/` is the only directory entry point outside the `effect` package.
 2. Every module file starts with a module TSDoc block (`@stability`, `@since`); every public export
-   has a TSDoc block ending in `@stability`, `@category`, `@since`.
+   has a TSDoc block ending in `@stability`, `@category`, `@since`. A 0.x package tags its modules
+   `unstable`, not `experimental`; categories come from upstream's list.
 3. Library source imports Effect per module: `import * as Effect from "effect/Effect"`, never the
    `effect` barrel (tests, examples and app code may use the barrel). Relative imports end in
    `.ts`. Type-only imports are `import type`.
@@ -85,12 +89,16 @@ against `main` at effect 4.1.5 (commit `66ab992`, 2026-11-20); re-check anything
 6. Options are one inline `readonly` object parameter with `?: T | undefined` fields.
 7. Constructors `make`, `empty`, `fromX`; guards `isX`; throwing or unchecked variants end in
    `Unsafe` (`makeUnsafe`, not `unsafeMake`); layers are `layer` / `layerX`.
-8. Expected failures are tagged errors (`Data.TaggedError` or `Schema.TaggedError`); related
-   failures form one error with a `reason` union. Library internals use `Effect.fnUntraced`;
-   boundaries that deserve a span use `Effect.fn("Module.name")`. Fail with `return yield* error`.
+8. Expected failures are tagged errors (`Data.TaggedError` or `Schema.TaggedError`); library
+   Schema errors pass an identifier (`Schema.TaggedError<E>("@scope/pkg/Module/E")("E", …)`);
+   related failures form one error with a `reason` union in the `SqlError` shape. Library internals
+   use `Effect.fnUntraced`; boundaries that deserve a span use `Effect.fn("Module.name")`. Fail
+   with `return yield* error`.
 9. Examples are ` ```ts import.meta.vitest ` fences with `// =>` assertions, run by
    `@effect/doctest`. No `@example` tags.
-10. Tests use `@effect/vitest` (`it.effect`, `assert`), type tests use tstyche in `typetest/`.
+10. Tests use `@effect/vitest` (`it.effect`, `assert`, `it.prop` with Schema or `effect/Arbitrary`
+    inputs), type tests use tstyche in `typetest/`, benchmarks are tinybench scripts plus the
+    `typeperf`/`runtimeperf` harnesses.
 11. Formatting: no semicolons, double quotes, no trailing commas, 120 columns, 2-space indent,
     arrow parentheses always (dprint).
 
@@ -102,5 +110,9 @@ against `main` at effect 4.1.5 (commit `66ab992`, 2026-11-20); re-check anything
   silence inference, or classes for plain data types.
 - Run effects inside library code (`Effect.runPromise`, `runSync`) except at documented runtime
   boundaries.
-- Write APIs from memory of Effect 3 (`Effect.Tag`, `Context.GenericTag`, `Either`,
-  `Schema.TaggedErrorClass`, `effect/unstable/*` paths, `Layer.scoped`) — check the docs and clone.
+- Write APIs from memory of Effect 3 or betas (`Effect.Tag`, `Context.GenericTag`, `Either`,
+  `Schema.TaggedErrorClass`, `effect/unstable/*` paths — 4.1.5 uses `effect/sql`, `effect/http-api`,
+  `effect/rpc`, `effect/workflow`, `effect/ai` — `Layer.scoped`, `FastCheck` from `effect/testing`)
+  — check the docs and clone.
+- Add tooling upstream does not use (a separate `@effect/language-service` dependency, `vitest
+  bench`, bundle budgets, attw/publint, doctests over READMEs) when the goal is to match Effect.

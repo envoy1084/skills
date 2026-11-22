@@ -38,13 +38,21 @@ packages/effect/src/internal/    implementation details (never import from here)
 packages/effect/src/<area>/      subpath families: http, http-api, sql, crypto, schema, testing, …
 packages/effect/test/            runtime tests (@effect/vitest)
 packages/effect/typetest/        type tests (tstyche, *.tst.ts)
-packages/effect/typeperf/        compiler-cost benchmarks
+packages/effect/benchmark/       tinybench micro-benchmarks (run with node)
+packages/effect/typeperf/        compiler-cost regression harness (thresholds per suite)
+packages/effect/runtimeperf/     runtime base/head regression harness
+packages/effect/*.md             long-form guides (SCHEMA.md, HTTPAPI.md, CONFIG.md), not shipped
 packages/opentelemetry/          a small satellite package: best template for a third-party package
 packages/vitest/                 @effect/vitest itself (src/index.ts, src/utils.ts)
 packages/tools/doctest/          @effect/doctest (README documents the example syntax)
 packages/tools/oxc/              lint preset and custom oxlint rules
 packages/tools/utils/            barrel codegen (effect-utils codegen)
-packages/tools/jsdocs/           TSDoc convention checker (effect-jsdocs)
+packages/tools/jsdocs/           TSDoc checker + JSON model (.data/jsdocs.json) for the API reference
+packages/tools/ai-docgen/        ai-docs/src → LLMS.md
+packages/tools/bundle/           bundle-size fixtures and comparison
+packages/tools/npm-promote/      moves npm `latest` after a staging release; triggers the website build
+patches/                         changesets patches used by the staging release flow
+scripts/                         clean, circular, version, set-strip-internal, check-dist-types, copy-ai-docs, …
 dprint.json, .oxlintrc.json      formatting and lint config
 tsconfig.base.json               compiler options + language-service plugin config
 vitest.config.ts, vitest.docs.ts test and doctest configuration

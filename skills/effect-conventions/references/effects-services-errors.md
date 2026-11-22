@@ -114,21 +114,26 @@ export class BadArgument extends Data.TaggedError("BadArgument")<{
 
 ### Schema-backed errors (serializable, HttpApi-friendly)
 
+Library errors always pass an **identifier** as the first call, `"<package>/<path>/<Module>"`
+(30 uses across published packages, e.g. `"effect/sql/SqlError"`,
+`"@effect/chat-slack/SlackChat/SlackAttachFailed"`); the empty `()` form appears only in TSDoc
+examples, application code and private tools (`packages/tools/npm-promote/src/NpmPromoteError.ts`):
+
 ```ts
 import * as Schema from "effect/Schema"
 
-export class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {
+export class NotFound extends Schema.TaggedError<NotFound>("@scope/pkg/Users/NotFound")("NotFound", {
   id: Schema.Number
 }) {}
 
-export class Unauthorized extends Schema.TaggedError<Unauthorized>()(
+export class Unauthorized extends Schema.TaggedError<Unauthorized>("@scope/pkg/Auth/Unauthorized")(
   "Unauthorized",
   { message: Schema.String },
   { httpApiStatus: 401 }
 ) {}
 ```
 
-`Schema.TaggedError<Self, Brand>()` takes an optional second type parameter
+`Schema.TaggedError<Self, Brand>(identifier?)` takes an optional second type parameter
 (`{ readonly brand: unique symbol }`) when two errors with identical fields must not be assignable
 to each other.
 
@@ -138,8 +143,65 @@ The optional third argument holds annotations such as `httpApiStatus`. Wrap unkn
 
 ### Error families with a `reason`
 
-When a module family has several failure kinds, expose **one** error with a `reason` union
-(`PlatformError.ts`, `crypto/CryptoError.ts`):
+When a module family has several failure kinds, expose **one** error with a `reason` union.
+Two upstream shapes exist; prefer the Schema one for new library code:
+
+**Schema reason family** (`sql/SqlError.ts`, the newer pattern, serializable):
+
+```ts
+import * as Predicate from "effect/Predicate"
+import * as Schema from "effect/Schema"
+
+const TypeId = "~@scope/pkg/StoreError" as const
+const ReasonTypeId = "~@scope/pkg/StoreError/Reason" as const
+
+const ReasonFields = {
+  cause: Schema.Defect(),
+  message: Schema.optional(Schema.String),
+  operation: Schema.optional(Schema.String)
+}
+
+export class ConnectionError extends Schema.TaggedError<ConnectionError>("@scope/pkg/StoreError/ConnectionError")(
+  "ConnectionError",
+  ReasonFields
+) {
+  readonly [ReasonTypeId] = ReasonTypeId
+  get isRetryable(): boolean {
+    return true
+  }
+}
+
+// … one class per reason, each with ReasonTypeId and isRetryable
+
+export type StoreErrorReason = ConnectionError | ConflictError
+
+export const StoreErrorReason: Schema.Union<[typeof ConnectionError, typeof ConflictError]> = Schema.Union([
+  ConnectionError,
+  ConflictError
+])
+
+export class StoreError extends Schema.TaggedError<StoreError>("@scope/pkg/StoreError")("StoreError", {
+  reason: StoreErrorReason
+}) {
+  readonly [TypeId] = TypeId
+  override readonly cause = this.reason
+  override get message(): string {
+    return this.reason.message || this.reason._tag
+  }
+  get isRetryable(): boolean {
+    return this.reason.isRetryable
+  }
+}
+
+export const isStoreError = (u: unknown): u is StoreError => Predicate.hasProperty(u, TypeId)
+export const isStoreErrorReason = (u: unknown): u is StoreErrorReason => Predicate.hasProperty(u, ReasonTypeId)
+```
+
+The parts, all from `SqlError.ts`: shared `ReasonFields`; a reason TypeId on every reason; an
+`isRetryable` getter per reason that the wrapper forwards; the reason type **and** a `Schema.Union`
+value of the same name; `cause` set to the reason; one guard for the wrapper and one for reasons.
+
+**Data reason family** (`PlatformError.ts`, `crypto/CryptoError.ts`, server-only):
 
 ```ts
 const TypeId = "~effect/PlatformError"
@@ -185,3 +247,15 @@ Callers handle reasons with `Effect.catchReason("PlatformError", "BadArgument", 
   schemas once at module level, not per call.
 - Look up current constructor and check names (`Schema.isPattern`, `Schema.isMinLength`,
   `Schema.isBetween`, `.check(...)`) in `SCHEMA.md` and `src/Schema.ts` of the clone.
+
+## Telemetry names
+
+- **Spans**: `"Module.operation"`, the module and function name (`"Migrator.run"`,
+  `"EmbeddingModel.embed"`, `"ChatHandler.handle"`), set with `Effect.fn("Module.op")` or
+  `Effect.withSpan`.
+- **Span attributes**: dotted lowercase, OpenTelemetry semantic conventions first
+  (`http.request.method`, `http.response.status_code`, `rpc.status_code`), package-specific ones
+  under a package prefix (`effect.ai.object_name`).
+- **Metrics**: snake_case with a package prefix (`effect_cluster_entities`,
+  `effect_cluster_entity_mailbox_size`), declared as named constants in a `*Metrics` module
+  (`cluster/ClusterMetrics.ts`) rather than inline at the use site.

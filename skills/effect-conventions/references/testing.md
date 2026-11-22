@@ -51,8 +51,19 @@ describe("Resource", () => {
 Rules:
 
 - Import `describe`, `it`, `assert` (and `layer`) from `@effect/vitest`, never `vitest`.
-- One file per module, `describe("Module", …)` at the top; test names are lowercase sentences
+- One file per module, `describe("Module", …)` at the top, nested `describe` blocks per function
+  or category (`describe("all", …)` in `test/Option.test.ts`); test names are lowercase sentences
   stating the behaviour (`"rejects duplicate role names"`), not `"test 1"` or `"works"`.
+- Imports: core tests mostly import the public barrel (`import { Effect, Option } from "effect"`,
+  93 of 128 files in `packages/effect/test`); satellite tests import either the barrel
+  (`import { PgClient } from "@effect/sql-pg"`) or module subpaths
+  (`import * as OtelTracer from "@effect/opentelemetry/OtelTracer"`). Never relative `../src` paths.
+- Layout: shared helpers in `test/utils/` (`packages/effect/test/utils/assert.ts`) or a single
+  `test/utils.ts` (`packages/sql/pg/test/utils.ts`); data in `test/fixtures/`. Test folders may
+  group differently from `src` directories.
+- File kinds: `Module.test.ts` (default run), `*.integration.test.ts` (containers or network,
+  gated by an env flag), `*.in-process.test.ts` (in-process servers, `packages/sql/pg/test`),
+  `*.test-utils.ts` (helpers shared by test files, `packages/effect/test/FileSystem.test-utils.ts`).
 - `it` for pure synchronous code, `it.effect` for Effects (provides a `TestClock` and a `Scope`,
   closes it after; return scoped effects directly instead of wrapping in `Effect.scoped`).
   `it.live` runs with real services when the live clock is the point.
@@ -74,7 +85,10 @@ Rules:
 
 ### Property tests
 
-`it.prop` / `it.effect.prop` take Schemas (or fast-check arbitraries) for inputs:
+`it.prop` / `it.effect.prop` take Schemas or `effect/Arbitrary` values for inputs
+(`Arbitraries` in `packages/vitest/src/index.ts`). There is no `FastCheck` in `effect/testing`
+(it holds `TestClock`, `TestConsole`, `TestSchema`); derive generators from Schemas or build them
+with `effect/Arbitrary`:
 
 ```ts
 it.effect.prop(
@@ -130,7 +144,9 @@ describe("Option", () => {
 ## Doctests
 
 - Root `vitest.docs.ts` registers `@effect/doctest/Plugin` with `includeSource` over package
-  sources (and docs Markdown); only fences tagged `ts import.meta.vitest` run.
+  sources only (`packages/*/src/**/*.ts`, `packages/*/*/src/**/*.ts`); READMEs and `ai-docs` are not
+  doctested (`ai-docs` is type-checked through its tsconfig). Only fences tagged
+  `ts import.meta.vitest` run.
 - Run `pnpm doctest --run <files>`. Each example is its own module; `// =>` lines are assertions.
 
 ```ts
@@ -155,8 +171,23 @@ export default defineConfig({
   helper over a shared config); no per-package vitest config.
 - Tests import packages by name; the root `tsconfig.tests.json` `paths` map names to `src`.
 - Never run the whole suite in watch mode: `pnpm test --run <files>`, `pnpm doctest --run <files>`.
-- Integration suites that need containers or networks are opt-in via environment variables
-  (`EFFECT_INTEGRATION_TESTS=1`), not part of the default run.
+- Integration suites that need containers or networks are opt-in via an environment variable
+  (`EFFECT_INTEGRATION_TESTS=1` includes `**/*.integration.test.ts`), so a local `pnpm test --run`
+  skips them. CI turns them on inside the ordinary Test job (`.github/workflows/check.yml`: the
+  flag, `TESTCONTAINERS_RYUK_DISABLED`, and pre-pulled `postgres:14-alpine`, `mysql:lts`, …) with
+  testcontainers; there is no separate database workflow.
+
+## Benchmarks and performance harnesses
+
+- **Runtime micro-benchmarks**: plain `tinybench` scripts in `packages/<name>/benchmark/<Name>.ts`
+  (`packages/effect/benchmark/Pool.ts`), run with `node`; not a Vitest project, no `vitest bench`.
+- **Type cost**: `packages/effect/typeperf/` (`run.mjs`, `compare.mjs`, `config.json`, `suites/`).
+  Each suite has a `baseline.ts`; fixtures import the public package (`import { Schema } from "effect"`,
+  never `../../src`); thresholds store exact maximum deltas for instantiations and types; update
+  with `--update`. Root scripts `typeperf`, `typeperf-compare`.
+- **Runtime regressions**: `packages/effect/runtimeperf/` (`run.mts`, `compare.mts`, suites,
+  worktree base/head comparison). Root scripts `runtimeperf`, `runtimeperf-compare`.
+- Read `.agents/skills/performance-analysis` in the clone before adding a suite.
 
 ## What to test
 

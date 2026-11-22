@@ -90,6 +90,16 @@ as its options, constructors taking its instances, re-exports, signatures mentio
 Tag the whole module if it exists to wrap the dependency. Runtime built-ins (Node, Bun, Deno, DOM)
 and framework types inherent to a binding (React in a React package) are exempt.
 
+How upstream uses the levels (module blocks, `packages/effect/src` at 4.1.5): 121 root modules
+`stable`, 22 `unstable`, only 3 `experimental` (`Codegen`, `Glob`, `TextDiff`); whole families
+(`sql`, `http`, `http-api`, `rpc`, `workflow`) are `unstable`. `experimental` is the exception,
+not the default for new work.
+
+For a **0.x package**, tag modules `unstable`, not `experimental`. Under `experimental` every
+change, breaking or not, is a `patch` bump, so consumers on `^0.1.0` receive breaking changes;
+under `unstable` a break is a `minor` bump, which `^0.1.0` does not cross. Move modules to
+`stable` deliberately when the API is settled.
+
 ### `@since`
 
 - New API: the **first release that will ship it**, derived from the package's current version and
@@ -117,6 +127,11 @@ non-empty value, so consistency comes from copying the analogue. Most used in `p
 - Shared: `utility types`, `encoding`, `decoding`, `serialization`, `tracing`, `metrics`,
   `logging`, `annotations`, `references`, `symbols`, `type IDs`, `configuration`, `math`,
   `comparisons`, `ordering`
+
+Also used across the packages (counts over all `packages/*`): `validation` 128, `hooks` 27,
+`pattern matching` 23, `middleware` 19, `components` 2. Do not invent categories that have no
+upstream use (`evaluating`, `checks`, `http`, `policies`): pick the closest listed one
+(`combinators`, `predicates`, `constructors`, `middleware`, `annotations`).
 
 Boundaries: services are contracts, tags identify services, layers provide them; getters
 retrieve values, accessors read context; errors model failures, error handling recovers; models
@@ -180,6 +195,23 @@ export declare namespace Redacted {
 ```
 
 Namespaces require `@since`, permit `@category`, reject `@default`.
+
+## Guides (`ai-docs`) and long-form docs
+
+Effect's prose documentation lives beside the code, not in TSDoc:
+
+- `ai-docs/src/`: numbered folders (`01_effect/`, `03_stream/`, `40_sql/`), each with an `index.md`
+  intro and runnable example files. Example files use numeric prefixes `10_`, `20_` (never a
+  leading `0` unless asked) and start with a JSDoc block carrying `@title` and an optional
+  description; `fixtures/` folders are ignored. Examples are heavily commented (how and why).
+  Rules: `ai-docs/README.md` and `.agents/skills/ai-docs` in the clone.
+- `pnpm ai-docgen` builds the root `LLMS.md` from them (generated, never edited; CI checks it is
+  current). `ai-docs` is type-checked, not doctested.
+- Long-form guides for large topics sit in the package root (`packages/effect/SCHEMA.md`,
+  `HTTPAPI.md`, `CONFIG.md`), are linked from the matching `ai-docs` `index.md`, and are not
+  shipped in `files`.
+- The API reference is generated from TSDoc only (see [tooling.md](tooling.md), API reference
+  pipeline), which is why every public export needs complete TSDoc.
 
 ## Validation
 
