@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": [
+    "./node_modules/@effect-kit/oxc/oxlintrc.json"
+  ],
+  "jsPlugins": [
+    "@effect-kit/oxc/oxlint",
+    {
+      "name": "landmines-testing",
+      "specifier": "@interfere/landmines/testing"
+    }
+  ],
+  "ignorePatterns": [
+    "**/dist",
+    "**/build",
+    "**/coverage",
+    "**/.data",
+    "tmp/**",
+    "research/**",
+    "**/.next/**",
+    "**/.output/**",
+    "**/routeTree.gen.ts"
+  ],
+  "rules": {
+    "effect/no-import-from-barrel-package": [
+      "error",
+      {
+        "checkPatterns": [],
+        "checkRelativeIndexImports": true
+      }
+    ],
+    "landmines-testing/no-fixed-sleep": "error",
+    "landmines-testing/no-flake-masking": "error",
+    "landmines-testing/no-test-doubles": "error",
+    "landmines-testing/no-unsignaled-poll": "error",
+    "landmines-testing/strict-msw": "error"
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/{test,typetest,scripts,scratchpad}/**",
+        "**/vitest.*.ts"
+      ],
+      "rules": {
+        "effect/no-bigint-literals": "off",
+        "eslint/no-console": "off",
+        "effect/no-import-from-barrel-package": "off"
+      }
+    },
+    {
+      "files": [
+        "**/test/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "vitest",
+                "message": "Import from @effect/vitest instead."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

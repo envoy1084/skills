@@ -1,126 +1,131 @@
 # __NAME__ repository guide
 
-__NAME__ is a pnpm and Turborepo monorepo written in TypeScript 7 with Effect v4. Read this file
-before changing anything, then load the skills listed under [Skills](#skills) that match the task.
+__NAME__ is a pnpm workspace written in TypeScript 7 with Effect v4, laid out like the Effect
+repository. Read this file before changing anything, then load the skills under [Skills](#skills)
+that match the task.
 
 ## Workspace map
 
 __WORKSPACE_MAP__
-- `packages/*`: publishable packages, each with an independent public boundary.
+- `packages/*`: publishable packages, each with its own public boundary.
 - `apps/*`: runnable applications (private).
+- `scripts/`: repository scripts (a private workspace package).
+- `scratchpad/`: ad hoc probes: `scratchpad/<name>.ts`, run with `node`, deleted afterwards (git
+  ignores everything there but its skeleton).
 <!-- @@publish -->
-- `tools/cli`: `__NAME__-dev`, repository tooling written with Effect (release checks).
+- `.changeset/`: pending release notes.
 <!-- @@end -->
-- `.config/`: Oxlint, Oxfmt, Commitlint, Turborepo and Vitest configuration.
 
 Dependencies point inward: apps depend on packages, packages never depend on apps.
 
 ## Commands
 
-- `pnpm check`: formatting, linting, type checking, builds and tests. Run it before every commit.
-- `pnpm format`: format the workspace with Oxfmt.
-- `pnpm test`: run every Vitest project once.
+| Command              | What it does                                                         |
+| -------------------- | -------------------------------------------------------------------- |
+| `pnpm check`         | Everything CI runs, in order. Run it before every push.              |
+| `pnpm typecheck`     | Type-check everything with tsrs (TypeScript 7 + Effect diagnostics)  |
+| `pnpm lint`          | oxlint with Effect's rules (`lint:fix` applies fixes)                |
+| `pnpm format`        | Format with dprint (`format:check` only checks)                      |
+| `pnpm test`          | Run every Vitest project once (`test:watch` for watch mode)          |
+| `pnpm build`         | `tsc -b`, then each package's build                                  |
+| `pnpm circular`      | Fail on import cycles between modules                                |
 <!-- @@publish -->
-- `pnpm pack:check`: publint and attw on each publishable package.
-- `pnpm changeset`: record a change to a published package.
+| `pnpm test:types`    | Type tests (`packages/*/typetest/*.tst.ts`) with tstyche             |
+| `pnpm test:docs`     | Run the `ts import.meta.vitest` examples in TSDoc                    |
+| `pnpm docs:check`    | Check TSDoc against the documentation rules                          |
+| `pnpm codegen`       | Regenerate the `@barrel` sections of `index.ts`                      |
+| `pnpm check:dist`    | Type-check the built declarations like a consumer                    |
+| `pnpm pack:check`    | Pack each package and check it with publint and attw                 |
+| `pnpm changeset`     | Record a change to a published package                               |
 <!-- @@end -->
+
+`pnpm typecheck:tsc` runs the official `tsc` and is for CI. Agents use `pnpm typecheck`.
+
+## Validation
+
+Use the narrowest validation that covers the change, then `pnpm check` before pushing:
+
+| Change                         | Validation                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| Source or tests                | `pnpm lint:fix`, `pnpm format`, `pnpm test <file>`, `pnpm typecheck`        |
+<!-- @@publish -->
+| Public API                     | Also `pnpm docs:check`, and `pnpm codegen` when a module is added or removed |
+| Type-level behaviour           | `pnpm test:types <file>`, `pnpm typecheck`                                  |
+| TSDoc examples                 | `pnpm test:docs <file>`, `pnpm docs:check`                                  |
+| Exports, `package.json`, build | `pnpm build`, `pnpm check:dist`, `pnpm pack:check`                          |
+<!-- @@end -->
+| Docs only                      | `pnpm format`                                                               |
+
+Report every command you could not run.
 
 ## Tooling
 
-Use the klarity presets configured at the root. Do not add Prettier, ESLint, Husky, lint-staged,
-tsup or Rollup unless the existing tools demonstrably cannot meet a requirement. Tool configs live in
-`.config/`.
+Configuration lives at the root: `dprint.json`, `.oxlintrc.json`, `tsconfig.base.json` (compiler
+options and the Effect language service), `tsconfig.packages.json` and `tsconfig.tests.json`
+(project references), `vitest.config.ts`, `lefthook.yml`, `commitlint.config.ts`.
 
-`tsc` is TypeScript 7 (tsgo) patched with the Effect language service (`@effect/tsgo`), so
-`typecheck` reports Effect diagnostics. Fix them in the code rather than silencing them; disable one
-with an `@effect-diagnostics-next-line` comment only when the flagged pattern is the point of the
-code. `pnpm install` also patches oxlint (`effect-tsgo patch --oxlint`): lint is type-aware and runs
-the `@effect/tsgo` oxlint presets. Silence those with a one-line reason and
-`// oxlint-disable-next-line effecttsgo/<rule> -- <reason>`.
+TypeScript is TypeScript 7 (tsgo), patched with the Effect language service by `pnpm install`
+(`effect-tsgo patch`), so `pnpm typecheck` reports Effect diagnostics. Fix what they flag; silence
+one only when the flagged pattern is the point, for the next line only
+(`// @effect-diagnostics-next-line <rule>:off`). oxlint runs Effect's own rules
+(`@effect-kit/oxc`): import modules (`effect/Effect`), not barrels; relative imports end in `.ts`;
+`Array<T>`, not `T[]`. Never disable a rule file-wide.
 
-Published packages build with tsdown (`tsdown.config.ts`, klarity's preset): ESM, declarations and
-source maps in `dist`, checked by publint. During development, workspace packages resolve each
-other's `src` through the `workspace-source` export condition, so typecheck and tests never need a
-build first.
+Packages export their source during development (`"./*": "./src/*.ts"`) and their build when
+published (`publishConfig.exports` → `dist`), so tests and type checks never need a build. Builds
+are `tsc -b` plus Babel's pure-call annotations, so bundlers tree-shake them like Effect.
 
 ## Dependencies
 
-- Pin every dependency to an exact version (`.npmrc` sets `save-exact`). Use the latest release
-  unless something blocks it, and say why when it does.
-- Published libraries declare `dependencies` and `peerDependencies` as ranges (`^4.1.5`) so they
-  work with their consumers' versions. Their `devDependencies` stay pinned.
-- The pnpm catalog (`pnpm-workspace.yaml`) holds only the shared toolchain (TypeScript, Node types,
-  Oxlint, Vitest, Effect) and dependencies that more than one package.json uses. Pin a dependency
-  that one package uses in that package.json.
-- New releases must be a day old before they install (`minimumReleaseAge`). Effect (`effect`,
-  `@effect/*`), Oxlint and Oxfmt are excluded: keep them on their latest release.
+- Root and development dependencies are exact versions; published packages declare ranges
+  (`^4.1.5`) for `dependencies` and `peerDependencies`. `effect` is a peer of every library.
+- The pnpm catalog holds versions more than one package.json uses.
+- New releases must be a day old before they install (`minimumReleaseAge`), except `effect`,
+  `@effect/*` and `@effect-kit/*`. Dependency install scripts are denied unless listed in
+  `allowBuilds`.
 
 ## Code guidelines
 
-These apply to all code: packages, apps, tools and tests. Load the `effect-conventions`
-skill before writing or reviewing code.
+Load the `effect-conventions` skill before writing or reviewing code.
 
-- Name things for what they are in the domain, consistently across the repository: one name per
-  concept, not synonyms per file.
+- Name things for what they are in the domain, consistently: one name per concept.
 - Use what exists before writing a helper: Effect (`Array`, `String`, `Option`, `Schema`,
-  `Predicate`, …), then the workspace's own modules. Add a missing, generally useful helper to the
-  package that owns the concept, with tests.
-- Inline one-off logic at its use site. Extract only substantial or reused logic, into a module with
-  a specific name; never into catch-all `utils` or `helpers` files.
-- Separate logical blocks with a blank line (setup, validation, execution, result). Oxfmt does not
-  insert logical blank lines; review grouping yourself.
-- Every exported declaration of a published package has TSDoc (`effect-conventions` skill). Preserve existing
-  public APIs when cleaning up.
-- Follow [landmines](https://github.com/interfere-inc/landmines) (below); lint enforces it.
-
-## Landmines
-
-The oxlint config extends `@interfere/landmines`' recommended rules, which keep agent-written code
-honest. Each rule's message says what to do instead; do that rather than disabling it.
-
-- **No prose comments** (`no-comments`): express meaning in names and code, and put rationale in
-  the commit message or PR. Allowed: functional directives (`oxlint-disable…`, `@ts-expect-error`,
-  `@effect-diagnostics…`), single-line `// WARNING:` comments for dangerous, recurring footguns, and
-  TSDoc on exported symbols. Module documentation goes on the `export * as` in `index.ts`.
-- **No inferred-away types** (`no-explicit-return-types`): do not annotate return types on
-  implementations; let them be inferred, and pin a contract with `satisfies` where it matters.
-- **Tests that cannot lie**: no test doubles (`no-test-doubles`: no module mocks, stubbed
-  globals or fake implementations; use the real implementation, test layers, and MSW with
-  unhandled requests as errors for the network), no fixed sleeps (`no-fixed-sleep`: await the
-  operation or a signal; use `TestClock`), no polling races (`no-unsignaled-poll`), and no retries
-  or raised timeouts (`no-flake-masking`): fix the flake.
-- **Structure**: tests live with the package they test (`colocated-tests`); test files are
-  `*.test.ts`, shared fixtures `*.fixture.ts` and helpers `*.test-utils.ts` (`test-file-names`);
-  `package.json` exports name explicit entry points, never `"./*"` (`package-exports`).
+  `Predicate`, …), then the workspace's own modules. Never create catch-all `utils` or `helpers`.
+- Inline one-off logic; extract only substantial or reused logic into a specifically named module.
+- Every export of a published package has TSDoc with `@since`, `@category` and `@stability`, and
+  examples as `**Example** (Title)` sections with a `ts import.meta.vitest` fence.
+- Comments explain why, not what.
 
 ## Tests
 
-Tests live in each package's `test/` folder and run through `@effect/vitest` (`it.effect`,
-`assert`). Write the tests a behaviour needs: the documented contract, its failure cases and
-regressions. Do not test what the type checker already proves. See the `effect-conventions` skill.
+Tests live in each package's `test/` folder and use `@effect/vitest` (`it.effect`, `assert`), never
+`vitest` directly. Write the tests a behaviour needs: the documented contract, its failure cases and
+regressions; leave what the type checker proves to `typetest/`. The landmines testing rules are
+enforced: no test doubles (use real implementations, test layers, MSW for the network), no fixed
+sleeps (`TestClock`, or await a signal), no polling races, and no retries or raised timeouts.
 
 ## Commits and pull requests
 
-Commits and PR titles follow Conventional Commits with kebab-case scopes (`feat(api): add retries`);
-Commitlint enforces it on commit and the `PR title` workflow on pull requests.
+Conventional Commits with kebab-case scopes (`feat(core): add retries`); commitlint checks commits
+and the `PR title` workflow checks PR titles, because PRs are squash-merged.
 <!-- @@publish -->
-Add a changeset for every user-visible change to a published package.
+Add a changeset for every change a consumer of a published package can observe.
 <!-- @@end -->
 
 ## Skills
 
-These skills are installed globally (`npx skills add envoy1084/skills`), not stored in this
-repository.
+Installed globally (`npx skills add envoy1084/skills`); repository-specific skills go in
+`.agents/skills/`.
 
-| Skill                 | Load it when                                                     |
-| --------------------- | ---------------------------------------------------------------- |
-| `effect-conventions`  | Writing, reviewing, documenting or testing any Effect code       |
-| `package-development` | Adding, renaming or publishing a workspace package               |
-| `dependencies`        | Adding, upgrading or removing a dependency                       |
-| `changesets`          | A change affects a published package                             |
+| Skill                 | Load it when                                               |
+| --------------------- | ---------------------------------------------------------- |
+| `effect-conventions`  | Writing, reviewing, documenting or testing any Effect code |
+| `package-development` | Adding, renaming or publishing a workspace package         |
+| `dependencies`        | Adding, upgrading or removing a dependency                 |
+| `changesets`          | A change affects a published package                       |
 
-# Learning more about Effect
+## Learning more about Effect
 
-Before writing any Effect code, read `node_modules/effect/AGENTS.md` **completely**, and follow the
-links in it when required. For APIs and concepts the guide does not cover, search the source in
-`node_modules/effect/src`. Never rely on Effect v3 knowledge or external copies of the docs.
+Before writing Effect code, read `node_modules/effect/AGENTS.md` completely and follow its links
+when needed. For anything it does not cover, search `node_modules/effect/src`. Never rely on
+Effect v3 knowledge.

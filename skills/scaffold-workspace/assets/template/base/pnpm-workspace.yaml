@@ -1,40 +1,32 @@
 packages:
-  - "apps/*"
-  - "packages/*"
-  - "tools/*"
+  - apps/*
+  - packages/*
+  - scratchpad
+  - scripts
 
-# Versions shared by the workspace: the toolchain every package uses (TypeScript, Node types,
-# Oxlint, Vitest) and dependencies referenced by more than one package.json. A dependency only one
-# package uses is pinned in that package.json instead.
+# Versions referenced by more than one package.json. A dependency only one package uses is pinned
+# in that package.json instead.
 catalog:
-  "@effect/tsgo": "0.73.2"
-  "@effect/vitest": "4.1.5"
-  "@interfere/landmines": "0.1.1"
   "@types/node": "26.6.6"
   effect: "4.1.5"
-  klarity: "0.3.0"
-  oxlint: "1.94.0"
-  oxlint-tsgolint: "7.0.2007"
-  # @@library
-  tsdown: "0.23.7"
-  # @@end
-  typescript: "7.0.2"
-  vitest: "5.1.1"
+
+engineStrict: true
+# Exact versions when adding dependencies; published libraries write their ranges by hand.
+savePrefix: ""
+# Scripts refuse to run on an install that no longer matches the lockfile.
+verifyDepsBeforeRun: error
 
 # A release must be a day old before it installs, so a compromised version is likely caught first.
 minimumReleaseAge: 1440
-
-# Pinned to their latest release on purpose: Effect and the Oxc tools (with their platform
-# binaries) ship together and are upgraded as soon as they are out.
+# Effect ships the language service, test helpers and runtime together, and @effect-kit republishes
+# Effect's repository tools with provenance: take their releases at once.
 minimumReleaseAgeExclude:
   - effect
   - "@effect/*"
-  - oxlint
-  - "@oxlint/*"
-  - oxlint-tsgolint
-  - "@oxlint-tsgolint/*"
-  - oxfmt
-  - "@oxfmt/*"
+  - "@effect-kit/*"
 
+# Dependency install scripts are denied unless listed as true.
 allowBuilds:
+  dprint: false
+  esbuild: false
   lefthook: true

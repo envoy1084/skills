@@ -1,44 +1,47 @@
 ---
 name: scaffold-workspace
-description: Creates a new pnpm + Turborepo + TypeScript 7 + Effect v4 monorepo with the full house setup — klarity presets (oxlint with Effect and landmines rules, oxfmt, commitlint, lefthook), tsgo patched with the Effect language service, pinned catalog with a one-day release age, a thorough .gitignore, AGENTS.md, CONTRIBUTING, SECURITY, LICENSE, hardened GitHub workflows, and (for npm packages) changesets with verified, provenance-signed releases. Use when the user wants to start, create, scaffold, bootstrap or set up a new project, repo, workspace, monorepo or library. Not for adding a package to an existing workspace (use package-development).
+description: Creates a new pnpm + TypeScript 7 + Effect v4 workspace laid out like the Effect repository — dprint, oxlint with Effect's rules, tsc -b + Babel builds with source-first exports, one root Vitest config, tsrs type checking with the Effect language service, plus TSDoc checks, barrel codegen, doctest and tstyche for libraries — with exact pins, a one-day release age, lefthook + commitlint, a thorough .gitignore, AGENTS.md, CONTRIBUTING, SECURITY, LICENSE, hardened GitHub workflows (CI, PR title, Dependabot, zizmor) and, for npm packages, changesets with verified, provenance-signed releases and smoke checks. Use when the user wants to start, create, scaffold, bootstrap or set up a new project, repo, workspace, monorepo or library. Not for adding a package to an existing workspace (use package-development).
 ---
 
 # Scaffold a workspace
 
 Creates a new repository from the templates in `assets/`, renders them with `scripts/scaffold.mjs`,
-then installs, refreshes versions, writes the first code, verifies everything and makes the first
-commit. The stack is fixed; this skill never asks the user to choose tools.
+then installs, writes the first code, verifies everything and makes the first commit. The stack is
+fixed; this skill never asks the user to choose tools.
 
 ## What gets created
 
 Every workspace:
 
-- **Tooling**: pnpm 12 workspace (`apps/*`, `packages/*`, `tools/*`), Turborepo, TypeScript 7
-  (tsgo) patched by `effect-tsgo` on install, klarity presets for tsconfig, oxlint (plus the
-  `@effect/tsgo` presets: correctness, antipattern, effectNative, style, maintainers, and
-  [landmines](https://github.com/interfere-inc/landmines)' recommended rules: no prose comments,
-  no test doubles, sleeps or flake masking, colocated tests, no annotated return types), oxfmt,
-  commitlint and lefthook (format + lint on commit, commitlint on commit-msg, lint + typecheck +
-  tests on push), Vitest through `@effect/vitest`. Tool configs live in `.config/`.
-- **Dependencies**: exact pins, a catalog holding only the shared toolchain, `minimumReleaseAge`
-  of one day with `effect`, `@effect/*`, oxlint and oxfmt (and their binaries) excluded.
-- **Files**: `.gitignore` (Node, Next.js, TanStack/Nitro/Vite, Astro, Expo, Rust, Python, Go,
-  Foundry, Terraform, databases, secrets, agents, editors, OSes), `.node-version`, `.npmrc`,
-  `.vscode/` (Oxc, Vitest, tsgo), `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`, `README.md`,
-  `LICENSE`.
-- **GitHub**: composite `setup` action (Node from `.node-version`, pnpm from `packageManager`,
-  frozen install), `CODEOWNERS`, bug and feature issue forms, PR template, Dependabot (actions and
-  npm, grouped, with cooldowns), zizmor config, `ci.yml` (`pnpm check` + a zizmor audit) and
-  `pr-title.yml` (Conventional Commits).
+- **Layout** (as in Effect): `packages/*` (publishable), `apps/*` (private), `scripts/` (repository
+  scripts) and `scratchpad/` (ad hoc probes, ignored by git), all pnpm workspace packages. Every
+  tool config sits at the root.
+- **TypeScript**: TypeScript 7 patched with the Effect language service (`@effect/tsgo`, on
+  install). `tsconfig.base.json` holds every compiler option and the language-service settings;
+  `tsconfig.packages.json` and `tsconfig.tests.json` are project references, so `pnpm typecheck`
+  (tsrs) checks source and tests incrementally.
+- **Lint and format**: dprint with Effect's configuration; oxlint with Effect's rules and preset
+  (`@effect-kit/oxc`) and landmines' testing rules. lefthook formats and lints staged files,
+  commitlint checks messages, and lint + typecheck + tests run before a push.
+- **Tests**: one root `vitest.config.ts` with a project per package, `@effect/vitest` only.
+- **Dependencies**: exact pins, a catalog for shared versions, `minimumReleaseAge` of one day,
+  dependency install scripts denied unless allowed.
+- **Files**: a multi-language `.gitignore`, `.node-version`, `.vscode/`, `AGENTS.md`,
+  `CONTRIBUTING.md`, `SECURITY.md`, `README.md`, `LICENSE`.
+- **GitHub**: a `setup` action, `CODEOWNERS`, issue forms, PR template, Dependabot with cooldowns,
+  zizmor config, `ci.yml` (Static, Types, Build, Test on the current and oldest Node, workflow
+  audit) and `pr-title.yml`.
 
-Only when the repository publishes packages to npm (`publish: true`):
+With `publish: true` (npm packages), also:
 
-- `.changeset/`, `changeset-status.yml`, `release.yml` (dispatch-only: opens the version PR, then
-  packs, verifies and publishes the exact tarballs with npm trusted publishing and provenance) and
-  `release-smoke.yml` (compares npm with the verified tarballs and checks provenance).
-- `tools/cli`: `<name>-dev release check|smoke`, an Effect CLI the release workflows run.
-- One `packages/<name>` per library: tsdown build (klarity preset, `devExports:
-  "workspace-source"`), full npm metadata, `effect` as a ranged peer dependency, publint + attw.
+- One `packages/<name>` per library: source-first exports (`"./*": "./src/*.ts"`) with
+  `publishConfig.exports` → `dist`, built by `tsc -b` + Babel pure-call annotations, `effect` as a
+  ranged peer, an `@barrel` index.
+- Library tooling: TSDoc checks (`@effect-kit/jsdocs`), barrel codegen (`@effect-kit/codegen`),
+  TSDoc examples as tests (`@effect/doctest`), type tests (tstyche), declaration and package checks.
+- Releases: `.changeset/`, `release.yml` (dispatch only: opens the version PR, then checks, packs,
+  verifies and publishes the exact tarballs with npm trusted publishing and provenance),
+  `release-smoke.yml`, `changeset-status.yml`, and the release CLI in `scripts/release/`.
 
 See [references/layout.md](references/layout.md) for every file and why it exists.
 
@@ -49,11 +52,11 @@ See [references/layout.md](references/layout.md) for every file and why it exist
   reading the matching template under `assets/template/`.
 - Never create the GitHub repository, push, publish to npm, or change GitHub settings unless the
   user explicitly asks. List them as next steps instead.
-- Never add tools outside the stack (Prettier, ESLint, Husky, Jest, tsup, …) and never ask the user
-  to choose between tools.
+- Never add tools outside the stack (Prettier, ESLint, Biome, oxfmt, Husky, Jest, tsup, tsdown,
+  Turborepo for libraries, …) and never ask the user to choose between tools.
 - Never skip hooks (`--no-verify`) to make the first commit pass; fix the cause.
 - Never write the user's email into any file unless they ask. Authors are `Name (url)`.
-- Leave no placeholder text: no `__TOKEN__`, no `<!-- … -->` usage stubs, no `TODO` in the result.
+- Leave no placeholder text: no `__TOKEN__`, no `TODO` in the result.
 
 ## Step 1: Gather the answers
 
@@ -78,10 +81,9 @@ Check npm names before committing to them: `npm view <scope>/<package> name` ret
 the name is free; for a new scope, the user must own the npm user or organisation of that name.
 
 Platform: `neutral` for runtime-agnostic libraries (the default), `node` when the package uses Node
-APIs, `browser` for DOM code, `react` for React component packages. A `react` package gets klarity's
-React tsconfig, tsdown (React externalized) and oxlint presets (hooks, jsx-a11y, react-perf),
-`src/index.tsx`, `react` as a ranged peer dependency, and jsdom + Testing Library tests. Its React
-versions are pinned in the package, or moved to the catalog when several packages use React.
+APIs (adds Node types), `browser` for DOM code, `react` for React components (`.tsx` modules,
+`react` as a ranged peer, React and Testing Library dev dependencies, a jsdom test project and
+oxlint's React plugins).
 
 Apps (Next.js, TanStack Start, …) are not rendered by the script. Scaffold the workspace first, then
 add each app as described in [references/apps.md](references/apps.md).
@@ -94,53 +96,78 @@ add each app as described in [references/apps.md](references/apps.md).
 3. Render: `node <skill>/scripts/scaffold.mjs --config <answers.json>`.
 
 The script validates every answer before writing, copies the layers (`base`, plus `publish` and one
-`library` copy per package), merges the release scripts into the root `package.json`, writes the
-LICENSE with the year and holder, fills every placeholder, expands the package lists (README table,
-issue-form dropdown, Vitest projects, workspace maps) and drops publish-only sections when not
-publishing. It fails on any placeholder left behind.
+`package` copy per library), merges the publish scripts into the root `package.json`, writes the
+LICENSE with the year and holder, fills every placeholder and package list, and drops
+publish-only sections when not publishing. It fails on any placeholder left behind.
 
 ## Step 3: Install
 
-Use the versions pinned in the templates as they are. Do not upgrade anything (no `pnpm up
---latest`, no Node or pnpm bumps) unless the user explicitly asks for latest versions; then follow
-[references/versions.md](references/versions.md).
+Use the versions pinned in the templates as they are. Do not upgrade anything unless the user
+explicitly asks for latest versions; then follow [references/versions.md](references/versions.md).
 
-1. `cd <dir> && git init -b main` (lefthook installs hooks during `pnpm install`, which needs git).
-2. `pnpm install`. It runs `prepare`: lefthook installs the hooks and `effect-tsgo` patches
-   TypeScript and oxlint. Both must report success.
+1. `cd <dir> && git init -b main` (lefthook installs its hooks during `pnpm install`, which needs
+   git).
+2. `pnpm install`. Its `prepare` script installs the hooks and runs `effect-tsgo patch`; both must
+   report success.
 
-## Step 4: Write the first code
+## Step 4: Write the first code (publishing workspaces)
 
-Every library needs a real first module, or publint, attw and the release check have nothing to
-check. Load the `effect-conventions` skill, then for each package:
+Every library needs a real first module, or the documentation, type and release checks have nothing
+to check. Load the `effect-conventions` skill, then for each package:
 
-1. Write `src/<Module>.ts` with the package's first public API (from what the user described; ask if
-   you have nothing to go on rather than inventing a domain) and `src/index.ts` re-exporting it as
-   `export * as Module from "./Module.ts";`. The module's TSDoc (`@stability`, `@since 0.1.0`) goes
-   on that re-export; the module file starts with its imports, and has no prose comments (landmines).
-2. Write `test/<Module>.test.ts` covering its contract and a failure case.
-3. Replace the README's Usage comment with a short runnable example, and add a Quick start to the
-   root README if the repository has one main package.
-4. Add the first changeset, `.changeset/initial-release.md`, bumping every package `minor`
+1. Write `src/<Module>.ts` (`.tsx` for React components) with the package's first public API, from
+   what the user described; ask if you have nothing to go on rather than inventing a domain. The
+   module starts with a TSDoc block carrying `@stability` and `@since 0.1.0`. Every export has a
+   one-paragraph description, `@stability`, `@category` and `@since 0.1.0`, and the main ones an
+   example:
+
+   ````ts
+   /**
+    * Creates a widget, failing when the width is not 1 to 12 columns.
+    *
+    * **Example** (Creating a widget)
+    *
+    * ```ts import.meta.vitest
+    * import { Widget } from "@scope/core"
+    * import * as Effect from "effect/Effect"
+    *
+    * Effect.runSync(Widget.make("cpu", 4)) // => { name: "cpu", columns: 4 }
+    * ```
+    *
+    * @stability unstable
+    * @category constructors
+    * @since 0.1.0
+    */
+   ````
+
+2. `pnpm codegen` fills `src/index.ts` (`export * as Module from "./Module.ts"`); never edit the
+   generated section by hand.
+3. Write `test/<Module>.test.ts` (`@effect/vitest`) covering the contract and a failure case, and
+   `typetest/<Module>.tst.ts` (tstyche) pinning the public types.
+4. Replace the `TODO` in the package README with a short, runnable usage example, and add a Quick
+   start to the root README if the repository has one main package.
+5. Add the first changeset, `.changeset/initial-release.md`, bumping every package `minor`
    (0.0.0 → 0.1.0) with the line "Initial release.".
 
 ## Step 5: Verify
 
 Run each and fix what fails; do not move on with a failing check:
 
-1. `pnpm format` (the rendered files are not formatted yet), then `pnpm check`.
-2. When publishing: `pnpm pack:check`, then a local release check:
-   `pnpm build && pnpm exec changeset pack --out-dir "$TMPDIR/<name>-pack" && pnpm release:check --pack-dir "$TMPDIR/<name>-pack"`.
-   It must end with `release-check: ok`. Delete the pack directory afterwards; `changeset pack`
-   does not change the repository.
-3. When `uvx` is available: `uvx zizmor --offline --config .github/zizmor.yml .github/workflows`
-   and `uvx --from actionlint-py actionlint`. Report them as skipped otherwise.
-4. `grep -rn "__[A-Z_]*__\|TODO" --exclude-dir=node_modules .` returns nothing.
+1. `pnpm format`, then `pnpm check` (format, lint, TSDoc, types, cycles, tests, type tests, doc
+   examples, build, declarations, packed packages).
+2. When publishing, a local release check:
+   `pnpm release:pack && pnpm release:check --pack-dir tmp/release`. It must end with
+   `release-check: ok`. Delete `tmp/release` afterwards.
+3. When `uvx` is available: `uvx zizmor --offline --config .github/zizmor.yml .github` and
+   `uvx --from actionlint-py actionlint`. Report them as skipped otherwise.
+4. `grep -rn "__[A-Z_]*__\|TODO" --exclude-dir=node_modules --exclude-dir=.git .` returns nothing.
+5. After `git add -A`, `git status --ignored --short` lists nothing the scaffold wrote (only
+   `node_modules`, build output and `.data/`).
 
 ## Step 6: Commit
 
-Stage everything and commit `chore: scaffold workspace` (the hooks format, lint and check the
-message). Do not push.
+Stage everything (`git add -A`; lefthook cannot stash partly staged files before the first commit)
+and commit `chore: scaffold workspace`. The hooks format, lint and check the message. Do not push.
 
 ## Step 7: Report
 
@@ -149,27 +176,34 @@ with their platforms), the license, the checks that ran and their results, anyth
 the next steps that need them:
 
 - Create the repository (`gh repo create <owner>/<repo> --source . --push`, public or private) —
-  offer to run it.
+  offer to run it. Pushing workflow files needs SSH or a token with the `workflow` scope.
 - Repository settings: enable private vulnerability reporting (SECURITY.md and the issue forms link
   to it) and Discussions (the issue forms link to them, or remove that link); protect `main`
-  requiring the `CI` checks and `PR title`; squash merging with the PR title as the commit message.
-- When publishing: allow GitHub Actions to create pull requests (Settings → Actions → General), so
-  the release workflow can open the version PR; add an npm trusted publisher for each package
-  (GitHub Actions, this repository, workflow `release.yml`). If npm does not allow configuring a
-  trusted publisher before a package exists, the first version must be published once by hand.
+  requiring the CI jobs and `PR title`; squash merging with the PR title as the commit message.
+- When publishing, the first release of each package (also in CONTRIBUTING.md):
+  1. Publish a placeholder once by hand so npm knows the package: from an empty folder with a
+     `package.json` holding only its `name`, `"version": "0.0.0"`, `license` and `repository`, run
+     `npm publish --access public --tag bootstrap`.
+  2. On npmjs.com, add a trusted publisher: GitHub Actions, this repository, workflow
+     `release.yml`, no environment. Allow `npm publish`; leave `npm dist-tag` unchecked.
+  3. Allow GitHub Actions to create pull requests (Settings → Actions → General).
+  4. Dispatch **Release** as a dry run, then for real (opens the version PR); merge it and dispatch
+     again to publish; then dispatch **Release smoke** with the IDs from the release summary.
 
 ## Troubleshooting
 
 - **`ERR_PNPM_…MINIMUM_RELEASE_AGE` or "no matching version"**: a pinned release is younger than a
   day (only after a version update). Wait, or pin the previous version; add an exclusion only for
   packages the policy already exempts.
+- **`ERR_PNPM_IGNORED_BUILDS`**: a new dependency has an install script. Add it to `allowBuilds`:
+  `false` when it works without the script (most binaries ship as optional dependencies), `true`
+  with a comment when it needs it.
+- **`ERR_PNPM_VERIFY_DEPS_BEFORE_RUN`**: `node_modules` no longer matches the lockfile (after a
+  pull or a version bump). Run `pnpm install`.
 - **`effect-tsgo patch` fails during `prepare`**: `@effect/tsgo` and `typescript` are out of step.
   Tell the user; with their go-ahead, update both together (references/versions.md) and reinstall.
-- **tsdown fails on a warning**: klarity builds with `failOnWarn`. The templates suppress the two
-  known TypeScript 7.0 generator warnings; once TypeScript 7.1 is stable, remove those suppressions
-  instead of adding new ones. Any other warning is a real problem to fix.
-- **Vitest "No projects were found"**: a `projects` list must not be empty; the template omits it
-  when there are no packages.
-- **The commit hook fails on lint**: fix the code (Effect rules flag native methods with Effect
-  equivalents, `yield*` in call arguments, missing brands; landmines flags prose comments, test
-  doubles, sleeps and annotated return types); do not disable rules wholesale.
+- **`pnpm docs:check` reports a module**: follow the message; the rules are in the
+  `effect-conventions` skill. `.tsx` modules are outside its scope (it reads `.ts` only).
+- **The commit hook fails on lint**: fix the code (Effect rules flag barrel imports, `.js` import
+  extensions, `T[]`; landmines flags test doubles, sleeps and flake masking); do not disable rules
+  wholesale.

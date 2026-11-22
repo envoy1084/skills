@@ -7,7 +7,7 @@ body:
       value: |
         Security issues go through [private reporting](https://github.com/__REPO__/security/advisories/new), not here.
         Redact API keys, tokens and credentials.
-  # @@library
+  # @@publish
   - type: dropdown
     id: packages
     attributes:

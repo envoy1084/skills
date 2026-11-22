@@ -4,24 +4,19 @@ Thanks for helping improve __NAME__. Bug fixes, features, tests and documentatio
 
 ## Prerequisites
 
-- Node.js 26
-- pnpm 12
-
-The repository pins its Node.js version in `.node-version` and its package manager in
-`package.json`.
+- Node.js 26 (pinned in `.node-version`; packages support Node.js 22.19 and later)
+- pnpm 12 (pinned in `package.json`)
 
 ## Setup
-
-Fork and clone the repository, then install dependencies:
 
 ```sh
 pnpm install
 ```
 
-`pnpm install` installs the Git hooks (Lefthook) and patches TypeScript 7 and Oxlint with the
-[Effect language service](https://github.com/Effect-TS/tsgo), so `tsc` and `oxlint` report Effect
-diagnostics. In VS Code, install the recommended extensions (Oxc, Vitest and TypeScript Native
-Preview); the workspace settings point them at the patched compiler and the configs in `.config/`.
+`pnpm install` installs the Git hooks (lefthook) and patches TypeScript 7 with the
+[Effect language service](https://github.com/Effect-TS/tsgo), so type checking reports Effect
+diagnostics. In VS Code, install the recommended extensions (dprint, Oxc, Vitest and TypeScript
+Native Preview).
 
 ## Repository structure
 
@@ -29,89 +24,97 @@ Preview); the workspace settings point them at the patched compiler and the conf
 __REPO_STRUCTURE__
 packages/       Publishable packages
 apps/           Runnable applications (private)
+scripts/        Repository scripts
+scratchpad/     Ad hoc probes (ignored by git)
 <!-- @@publish -->
-tools/cli/      __NAME__-dev: repository tooling (release checks)
 .changeset/     Pending release notes
 <!-- @@end -->
-.config/        Lint, format, test, Turborepo and commit configuration
 ```
 
-Keep changes within the package that owns the behavior.
+Keep changes within the package that owns the behaviour.
 
-## Development checks
+## Checks
 
-Run the complete check before opening a pull request:
+Run everything CI runs before opening a pull request:
 
 ```sh
 pnpm check
 ```
 
-| Command           | What it does                                         |
-| ----------------- | ---------------------------------------------------- |
-| `pnpm check`      | Format check, lint, typecheck, build and tests       |
-| `pnpm format`     | Format the workspace with Oxfmt                      |
-| `pnpm lint:fix`   | Apply Oxlint's automatic fixes                       |
-| `pnpm test`       | Run every Vitest project once                        |
-| `pnpm dev`        | Run every package's dev task                         |
+| Command             | What it does                                     |
+| ------------------- | ------------------------------------------------ |
+| `pnpm format`       | Format with dprint                               |
+| `pnpm lint:fix`     | Apply oxlint's automatic fixes                   |
+| `pnpm typecheck`    | Type-check with the Effect language service      |
+| `pnpm test`         | Run the tests once (`pnpm test:watch` to watch)  |
+| `pnpm build`        | Build every package                              |
 <!-- @@publish -->
-| `pnpm pack:check` | Check each publishable package with publint and attw |
+| `pnpm test:types`   | Run the type tests                               |
+| `pnpm test:docs`    | Run the examples in the TSDoc                    |
+| `pnpm docs:check`   | Check the TSDoc                                  |
+| `pnpm codegen`      | Regenerate the barrel exports in `index.ts`      |
+| `pnpm pack:check`   | Check the packed packages with publint and attw  |
 <!-- @@end -->
 
-The Git hooks format and lint staged files on commit, check the commit message, and run lint,
-typecheck and tests before a push.
+The Git hooks format and lint staged files on commit, check the commit message, and run lint, type
+checking and tests before a push.
 
 ## Tests
 
-Each package keeps its tests in `test/`, written with `@effect/vitest`. Tests import the package by
-its name and resolve its sources through the `workspace-source` export condition, so no build is
-needed. Register a new package's tests as a project in `.config/vitest.config.ts`.
+Each package keeps its tests in `test/`, written with `@effect/vitest`. Packages export their
+source during development, so tests need no build.
 
 ## Commits and pull requests
 
 Use [Conventional Commits](https://www.conventionalcommits.org) with an optional kebab-case scope:
 
 ```text
-feat(api): add retries to the client
+feat(core): add retries to the client
 fix(web): keep the search query on reload
 docs: explain the release workflow
 ```
 
-Pull requests are squash-merged, so the PR title becomes the commit: it must follow the same format
-(checked by the `PR title` workflow). Keep each pull request focused on one change and fill in the
-template.
+Pull requests are squash-merged, so the PR title becomes the commit and must follow the same format
+(checked by the `PR title` workflow). Keep each pull request to one change and fill in the template.
 <!-- @@publish -->
 
 ## Changesets
 
-Add a changeset for every user-visible change to a published package:
+Add a changeset for every change a consumer of a published package can observe:
 
 ```sh
 pnpm changeset
 ```
 
 Pick the packages and the bump (`patch` for fixes, `minor` for features, `major` for breaking
-changes) and write one or two sentences for the changelog. Tests, docs, tooling and private packages
-need no changeset.
+changes; before 1.0.0 breaking changes are `minor`) and write one sentence for the changelog. Tests,
+docs, tooling and private packages need no changeset.
 
 ## Releases
 
 Maintainers release from `main` by dispatching the `Release` workflow:
 
 1. With pending changesets, it opens (or updates) the `chore(release): version packages` PR.
-2. Merging that PR and dispatching again packs the packages, verifies the tarballs
-   (`pnpm release:check`: publint, attw and a consumer install), and publishes those exact tarballs
-   to npm with provenance, then tags and creates GitHub releases.
-3. Once npm serves the versions, dispatch `Release smoke` with the IDs from the release summary to
-   compare the published packages with the verified tarballs.
+2. Merging that PR and dispatching again checks the repository, packs the packages, verifies the
+   tarballs (`pnpm release:check`: publint, attw, a clean install that imports every entry point
+   and runs every bin), and publishes those exact tarballs with npm provenance, then tags and
+   creates GitHub releases.
+3. Once npm serves the versions, dispatch `Release smoke` with the IDs from the release summary: it
+   compares the published packages and their provenance with the verified tarballs.
 
 The workflow defaults to a dry run, which versions and verifies inside the runner and publishes
 nothing.
 
-### npm trusted publisher setup
+### First release of a package
 
-Releases publish with npm trusted publishing (OIDC), without an npm token. For each package, add a
-trusted publisher on npmjs.com: GitHub Actions, this repository, workflow `release.yml`, no
-environment.
+npm trusted publishing (OIDC, no npm token) can only be configured for a package that exists:
+
+1. Publish a placeholder once, by hand, under a separate tag so `latest` stays free:
+   `npm publish --access public --tag bootstrap` from a folder containing only a `package.json`
+   with the package's `name`, `"version": "0.0.0"`, `license` and `repository`.
+2. On npmjs.com, add a trusted publisher to the package: GitHub Actions, this repository, workflow
+   `release.yml`, no environment. Allow `npm publish`; leave `npm dist-tag` unchecked.
+3. In the repository settings, allow GitHub Actions to create pull requests (Actions → General).
 <!-- @@end -->
 
 ## License

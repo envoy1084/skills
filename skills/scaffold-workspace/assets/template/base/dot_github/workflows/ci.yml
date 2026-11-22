@@ -1,6 +1,5 @@
-# Pull requests, pushes to main, the merge queue and manual runs: formatting, lint, types, builds
-# and tests (and package metadata when the repository publishes), plus a security audit of the
-# workflows.
+# Pull requests, pushes to main, the merge queue and manual runs. Each job runs one stage of
+# `pnpm check`, so a failure names the stage; tests also run on the oldest supported Node.
 name: CI
 
 on:
@@ -18,10 +17,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
+  static:
+    name: Static
     # @@publish
-    # The version PR only changes versions and changelogs, and GitHub does not run workflows on
-    # PRs the workflow token opens; dispatch CI on its branch to check it.
+    # GitHub does not run workflows on PRs the workflow token opens: the version PR is checked by
+    # dispatching CI on its branch, and again by the release before publishing.
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.user.login != 'github-actions[bot]' ||
@@ -29,7 +29,7 @@ jobs:
       github.head_ref != 'changeset-release/main'
     # @@end
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
@@ -37,12 +37,77 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache: pnpm
-      - run: pnpm check
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm circular
       # @@publish
+      - run: pnpm docs:check
+      - name: Require generated barrels to be committed
+        run: |
+          pnpm codegen
+          git diff --exit-code -- packages
+      # @@end
+
+  types:
+    name: Types
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache: pnpm
+      - run: pnpm typecheck:tsc
+      # @@publish
+      - run: pnpm test:types
+      # @@end
+
+  build:
+    name: Build
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache: pnpm
+      - run: pnpm build
+      # @@publish
+      - run: pnpm check:dist
       - run: pnpm pack:check
       # @@end
 
+  test:
+    name: Test (Node ${{ matrix.node || 'from .node-version' }})
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Empty uses .node-version; 22.19.0 is the oldest Node the packages support (`engines`).
+        node: ["", "22.19.0"]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache: pnpm
+          node-version: ${{ matrix.node }}
+      - run: pnpm test
+      # @@publish
+      - run: pnpm test:docs
+      # @@end
+
   zizmor:
+    name: Workflow audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

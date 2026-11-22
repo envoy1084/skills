@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "references": [{ "path": "tsconfig.packages.json" }],
+  "include": [
+    "./vitest.*.ts",
+    "./scripts/**/*.ts",
+    "./packages/*/test/**/*.ts",
+    "./packages/*/test/**/*.tsx",
+    "./packages/*/typetest/**/*.ts"
+  ],
+  "exclude": ["**/node_modules/**", "**/dist/**"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "erasableSyntaxOnly": false,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "paths": {},
+    "plugins": [{
+      "name": "@effect/language-service",
+      "effectFn": ["untraced"],
+      "namespaceImportPackages": [],
+      "includeSuggestionsInTsc": false,
+      "ignoreEffectWarningsInTscExitCode": true,
+      "ignoreEffectErrorsInTscExitCode": false,
+      "overrides": [
+        {
+          "include": ["**/typetest/**/*.ts"],
+          "options": { "diagnosticSeverity": { "floatingEffect": "off" } }
+        }
+      ],
+      "diagnosticSeverity": {
+        "unknownInEffectCatch": "off",
+        "multipleEffectProvide": "off",
+        "unstableApiUsage": "off",
+        "effectFnOpportunity": "error"
+      }
+    }]
+  }
+}

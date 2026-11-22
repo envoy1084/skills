@@ -1,0 +1,58 @@
+{
+  "name": "__SCOPE__/__PKG__",
+  "version": "0.0.0",
+  "type": "module",
+  "license": "__LICENSE__",
+  "description": "__PKG_DESCRIPTION__",
+  "keywords": [],
+  "homepage": "https://github.com/__REPO__/tree/main/packages/__PKG__#readme",
+  "bugs": {
+    "url": "https://github.com/__REPO__/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/__REPO__.git",
+    "directory": "packages/__PKG__"
+  },
+  "author": "__AUTHOR__",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "sideEffects": [],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts",
+    "./internal/*": null,
+    "./index": null
+  },
+  "files": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      "./package.json": "./package.json",
+      ".": "./dist/index.js",
+      "./*": "./dist/*.js",
+      "./internal/*": null,
+      "./index": null
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.json && babel dist --plugins annotate-pure-calls --out-dir dist --source-maps"
+  },
+  "peerDependencies": {
+    "effect": "^__EFFECT_VERSION__"
+  },
+  "devDependencies": {
+    "effect": "catalog:"
+  }
+}

@@ -2,7 +2,7 @@
 
 __DESCRIPTION__
 
-<!-- @@library -->
+<!-- @@publish -->
 ## Packages
 
 | Package | Description |
@@ -12,7 +12,7 @@ __PACKAGES_TABLE__
 <!-- @@end -->
 ## Development
 
-Requires Node.js 26 and pnpm 12.
+Requires Node.js 26 (`.node-version`) and pnpm 12.
 
 ```sh
 pnpm install

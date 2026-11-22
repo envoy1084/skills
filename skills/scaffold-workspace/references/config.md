@@ -37,13 +37,13 @@
 | `copyrightHolder` | yes | Person or company in `LICENSE`. |
 | `license` | yes | `MIT`, `Apache-2.0`, `ISC`, `BSD-3-Clause` or `UNLICENSED`. |
 | `year` | no | Copyright year; defaults to the current year. |
-| `publish` | no | `true` adds changesets, the release workflows and `tools/cli`. Default `false`. |
+| `publish` | no | `true` adds the packages, library tooling, changesets and the release workflows and CLI. Requires at least one package. Default `false`. |
 | `scope` | when `publish` | npm scope with `@`, for every package and `tools`. |
-| `packages` | no | Publishable libraries; requires `publish: true`. |
+| `packages` | with `publish` | Publishable libraries; only with `publish: true`. |
 | `packages[].name` | yes | kebab-case folder and package name (`<scope>/<name>`). |
 | `packages[].description` | yes | One sentence for npm, README tables and the workspace map. |
 | `packages[].keywords` | yes | 3–10 specific npm search terms; deduplicated and sorted. |
-| `packages[].platform` | yes | `neutral` (runtime-agnostic), `node` (adds Node types), `browser`, or `react` (React presets, `.tsx` entry, jsdom tests, `react` peer). |
+| `packages[].platform` | yes | `neutral` (runtime-agnostic), `node` (adds Node types), `browser`, or `react` (`.tsx` modules, `react` peer, jsdom tests, oxlint React plugins). |
 
 ## What the script fills in
 
@@ -54,14 +54,19 @@
 | `__OWNER__` | `owners` joined with spaces |
 | `__LICENSE_NAME__` | Human name of the license for CONTRIBUTING |
 | `__EFFECT_VERSION__` | The catalog's `effect` version, for library peer ranges |
+| `__NAMESPACE_IMPORT_PACKAGES__` | `effect`, `@effect/*` and `<scope>/*` for the language service |
 | `__PKG__`, `__PKG_DESCRIPTION__` | Per package, inside `packages/<name>` |
-| `__TSDOWN_PRESET__` and the tsconfig `extends` | From `platform` |
-| `__REACT_FILES__` | Globs of the `react` packages, for the oxlint React override |
 
 Line placeholders expand to one line per package, or vanish when there are none:
 `__VITEST_PROJECTS__`, `__PACKAGES_TABLE__`, `__PACKAGE_OPTIONS__`, `__WORKSPACE_MAP__`,
 `__REPO_STRUCTURE__`.
 
-Blocks between a line containing `@@publish` (or `@@library`, meaning at least one package, or
-`@@react`, meaning at least one React package) and a
-line containing `@@end` are kept only when the condition holds; the marker lines are always removed.
+Blocks between a line containing `@@publish` (or `@@react`, meaning at least one React package) and
+a line containing `@@end` are kept only when the condition holds; the marker lines are always
+removed.
+
+JSON is edited structurally, not through placeholders: `package.fragment.json` (publish) is merged
+into the root `package.json`; `tsconfig.packages.json` gets one reference per package;
+`tsconfig.tests.json` gets `paths` from each package name to its `src`; `.oxlintrc.json` gets the
+barrel-import patterns for the scope and, with React packages, a React override; each package's
+`package.json` and `tsconfig.json` get the keywords, platform dependencies and Node types.
